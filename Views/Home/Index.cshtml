@@ -1,0 +1,64 @@
+﻿@{
+    ViewData["Title"] = "Почетна";
+}
+
+<div class="text-center mt-5 mb-5">
+    <h1 class="fw-bold display-5 text-uppercase" style="color: var(--rfzo-primary);">
+        Интерни систем за контролу и упоређивање плата
+    </h1>
+    <p class="lead text-muted">Изаберите опцију испод како бисте започели рад са документима</p>
+</div>
+
+<div class="container">
+    <div class="row g-4 justify-content-center">
+        
+        <!-- Прво велико dugme: ЗУ (Са новом сликом) -->
+        <div class="col-md-4">
+            <div class="rfzo-panel p-4 text-center h-100 d-flex flex-column justify-content-between">
+                <div>
+                    <!-- Директно учитавање ваше ЗУ слике из images фолдера -->
+                    <div class="mb-3 d-flex justify-content-center align-items-center" style="height: 70px;">
+                        <img src="~/images/logoZU.jpg" alt="ЗУ Лого" style="max-height: 100%; max-width: 100%; object-fit: contain;" />
+                    </div>
+                    <h4 class="fw-bold mb-3" style="color: var(--rfzo-primary);">ЗДРАВСТВЕНЕ УСТАНОВЕ</h4>
+                    <p class="text-muted small">Учитавање ексел табела са подацима генерисаним од стране здравствених установа (ЗУ).</p>
+                </div>
+                <div class="mt-4">
+                    <a class="btn btn-rfzo-primary w-100 py-2 fs-5" asp-controller="Home" asp-action="Zu">Отвори ЗУ</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Друго велико dugme: РФЗО (Са новом сликом) -->
+        <div class="col-md-4">
+            <div class="rfzo-panel p-4 text-center h-100 d-flex flex-column justify-content-between">
+                <div>
+                    <!-- Директно учитавање ваше нове РФЗО слике из images фолдера -->
+                    <div class="mb-3 d-flex justify-content-center align-items-center" style="height: 70px;">
+                        <img src="~/images/logoRFZO1.jpg" alt="РФЗО Лого Нови" style="max-height: 100%; max-width: 100%; object-fit: contain;" />
+                    </div>
+                    <h4 class="fw-bold mb-3" style="color: var(--rfzo-primary);">РФЗО БАЗА</h4>
+                    <p class="text-muted small">Учитавање званичних и одобрених табела са подацима РФЗО-а за обрачунски период.</p>
+                </div>
+                <div class="mt-4">
+                    <a class="btn btn-rfzo-primary w-100 py-2 fs-5" asp-controller="Home" asp-action="Rfzo">Отвори РФЗО</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Треће велико dugme: Креирај извештај -->
+                <!-- Треће велико dugme: Креирај извештај (Сада потпуно исто као прва два) -->
+        <div class="col-md-4">
+            <div class="rfzo-panel p-4 text-center h-100 d-flex flex-column justify-content-between">
+                <div>
+                    <div class="fs-1 mb-3 d-flex justify-content-center align-items-center" style="height: 70px;">📊</div>
+                    <h4 class="fw-bold mb-3" style="color: var(--rfzo-primary);">ИЗВЕШТАЈ И ПРОВЕРА</h4>
+                    <p class="text-muted small">Покретање унакрсног упоређивања података, детекција одступања и чишћење грешака.</p>
+                </div>
+                <div class="mt-4">
+                    <a class="btn btn-rfzo-primary w-100 py-2 fs-5" asp-controller="Home" asp-action="KreirajIzvestaj">Покрени проверу</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
