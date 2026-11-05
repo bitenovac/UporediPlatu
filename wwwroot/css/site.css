@@ -1,0 +1,113 @@
+/* Uvoz zvaničnog RFZO fonta sa Google Fonts-a */
+@import url('https://googleapis.com');
+
+:root {
+    --rfzo-primary: #002F65;      /* Prepoznatljiva tamnoplava */
+    --rfzo-secondary: #004b93;    /* Nešto svetlija plava za hover */
+    --rfzo-accent: #E1A624;       /* Zlatno-žuta linija */
+    --rfzo-gray-bg: #F4F6F9;      /* Svetlosiva za panele */
+    --rfzo-text: #212529;         /* Tamnosiva za čitljivost teksta */
+}
+
+body {
+    background-color: #ffffff;
+    font-family: "Open Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    color: var(--rfzo-text);
+}
+
+/* Гoрња трака - Заглавље без унутрашњег падинга */
+.rfzo-navbar {
+    background-color: var(--rfzo-primary) !important;
+    border-bottom: 4px solid var(--rfzo-accent);
+    padding: 0 !important; /* Уклоњен сав размак да би лого ишао од ивице до ивице */
+}
+
+/* Центрирање наслова са леве стране */
+.rfzo-navbar .navbar-brand {
+    font-size: 1.25rem;
+    letter-spacing: 0.5px;
+    line-height: 60px; /* Ово држи текст тачно у средини у односу на лого висока 60px */
+}
+
+
+/* Stil za dugmad u zaglavlju umesto starog menija */
+.btn-nav-rfzo {
+    background-color: transparent;
+    color: #ffffff !important;
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    font-weight: 600;
+    padding: 8px 20px;
+    margin-left: 10px;
+    border-radius: 4px;
+    transition: all 0.2s ease-in-out;
+    text-decoration: none;
+    display: inline-block;
+}
+
+.btn-nav-rfzo:hover {
+    background-color: var(--rfzo-accent);
+    border-color: var(--rfzo-accent);
+    color: var(--rfzo-primary) !important;
+}
+
+/* Stilovi za panele/kartice formi */
+.rfzo-panel {
+    background-color: var(--rfzo-gray-bg);
+    border: 1px solid #DEE2E6;
+    border-top: 4px solid var(--rfzo-primary);
+    border-radius: 4px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+}
+
+.rfzo-page-title {
+    color: var(--rfzo-primary);
+    font-weight: 700;
+    text-transform: uppercase;
+    position: relative;
+    padding-bottom: 12px;
+}
+
+.rfzo-page-title::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 60px;
+    height: 4px;
+    background-color: var(--rfzo-accent);
+}
+/* Додаје простор на дну странице да доњи мени не би прекривао садржај */
+body {
+    padding-bottom: 75px !important;
+}
+
+/* Компактно доње дугме - када СТРАНИЦА НИЈЕ ОТВОРЕНА (Плава варијанта) */
+.btn-dole-pasivno {
+    background-color: var(--rfzo-primary);
+    color: #ffffff !important;
+    font-size: 0.85rem;
+    font-weight: 600;
+    padding: 6px 14px;
+    border-radius: 4px;
+    text-decoration: none;
+    transition: all 0.2s ease-in-out;
+    border: 1px solid var(--rfzo-primary);
+}
+
+.btn-dole-pasivno:hover {
+    background-color: var(--rfzo-secondary);
+    border-color: var(--rfzo-secondary);
+}
+
+/* Компактно доње дугме - када ЈЕ СТРАНИЦА ОТВОРЕНА (Златна варијанта) */
+.btn-dole-aktivno {
+    background-color: var(--rfzo-accent);
+    color: var(--rfzo-primary) !important;
+    font-size: 0.85rem;
+    font-weight: 700;
+    padding: 6px 14px;
+    border-radius: 4px;
+    text-decoration: none;
+    border: 1px solid var(--rfzo-accent);
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.15);
+}
