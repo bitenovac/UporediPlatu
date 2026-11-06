@@ -9,7 +9,7 @@
     <div class="row">
         <div class="col-12">
             <h2 class="mb-3 text-success fw-bold">Страница РФЗО</h2>
-            <p class="lead text-muted">Изаберите обрачунски период и учитајте званичну Excel табелу.</p>
+            <p class="lead text-muted">Изаберите обрачунски период, а затим превуците или учитајте званичну Excel табелу.</p>
             <hr />
         </div>
     </div>
@@ -18,28 +18,40 @@
         <div class="col-md-8">
             <div class="card shadow-lg border-0 mb-4">
                 <div class="card-header text-white py-3" style="background-color: #1f6f43;">
-                    <h5 class="mb-0">📄 Учитавање РФЗО Excel табеле</h5>
+                    <h5 class="mb-0 d-flex align-items-center gap-2">
+                        📄 Учитавање РФЗО Excel табеле
+                    </h5>
                 </div>
                 <div class="card-body p-4">
                     
-                    <form action="/Home/ObradiUvozRfzo" method="post" enctype="multipart/form-data">
+                    <form id="rfzo-form" action="/Home/ObradiUvozRfzo" method="post" enctype="multipart/form-data">
                         
                         <div class="row g-3 mb-4 bg-light p-3 rounded border">
                             <div class="col-12">
                                 <label class="form-label fw-bold text-secondary mb-1">Обрачунски период за који се уноси плата:</label>
                             </div>
                             <div class="col-sm-12">
-                                <input type="month" name="period" class="form-control border-success" required />
-                                <small class="text-muted">Изаберите месец и годину из календара</small>
+                                <input type="month" id="period-input" name="period" class="form-control border-success" required />
+                                <small class="text-muted">Изаберите месец и годину из календара пре него што учитате фајл</small>
                             </div>
                         </div>
                         
-                        <div class="mb-4">
-                            <label class="form-label fw-bold text-secondary">Изаберите Excel фајл са рачунара (.xlsx, .xls):</label>
-                            <input type="file" name="excelFajl" class="form-control border-success" accept=".xlsx, .xls" required />
+                        <div id="drop-zone" class="drop-zone mb-4">
+                            <div class="drop-zone-content">
+                                <div class="excel-icon mb-3">📁</div> 
+                                <h5 class="fw-bold text-success" id="drop-zone-text">Превуците Excel фајл овде</h5>
+                                <p class="text-muted small">Подржани формати: .xlsx, .xls</p>
+                                <span class="d-block my-2 text-muted">или</span>
+                                <button type="button" class="btn btn-success btn-sm px-4" onclick="document.getElementById('file-input').click()">
+                                    Изаберите са рачунара
+                                </button>
+                            </div>
+                            <input type="file" id="file-input" name="excelFajl" accept=".xlsx, .xls" style="display: none;" required />
                         </div>
 
-                        <button type="submit" class="btn btn-success w-100 py-2 fw-bold">
+                        <div id="upload-status" class="alert d-none mb-3" role="alert"></div>
+
+                        <button type="submit" class="btn btn-success w-100 py-2 fw-bold shadow-sm">
                             🚀 Покрени увоз података
                         </button>
                     </form>
@@ -51,7 +63,7 @@
 
     <!-- ТАБЕЛА ИСТОРИЈЕ ИСПОД ПОЉА ЗА УБАЦИВАЊЕ -->
     <div class="row justify-content-center mt-4">
-        <div class="col-md-8">
+        <div class="col-md-9">
             <div class="card shadow border-0 mb-5">
                 <div class="card-header bg-secondary text-white py-3">
                     <h5 class="mb-0">📊 Историја учитаних РФЗО фајлова</h5>
@@ -72,27 +84,30 @@
                                         <th class="ps-3">Назив увезеног фајла</th>
                                         <th>Обрачунски период</th>
                                         <th>Датум и време увоза</th>
-                                        <th class="text-center pe-3">Број записа</th>
+                                        <th class="text-center">Број записа</th>
+                                        <th class="text-center pe-3" style="width: 120px;">Акције</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     @foreach (DataRow red in Model.Rows)
                                     {
+                                        string nazivFajla = red["NazivFajla"].ToString();
                                         DateTime period = Convert.ToDateTime(red["PeriodUvoza"]);
                                         DateTime datumUvoza = Convert.ToDateTime(red["DatumUvozaPodataka"]);
+                                        string kljucVremena = datumUvoza.ToString("yyyyMMddHHmmssfff");
 
                                         <tr>
-                                            <td class="fw-bold text-success ps-3">
-                                                🟢 @red["NazivFajla"]
-                                            </td>
-                                            <td>
-                                                @period.ToString("MM/yyyy")
-                                            </td>
-                                            <td class="text-muted">
-                                                @datumUvoza.ToString("dd.MM.yyyy HH:mm:ss")
+                                            <td class="fw-bold text-success ps-3">🟢 @nazivFajla</td>
+                                            <td>@period.ToString("MM/yyyy")</td>
+                                            <td class="text-muted">@datumUvoza.ToString("dd.MM.yyyy HH:mm")</td>
+                                            <td class="text-center">
+                                                <span class="badge bg-primary rounded-pill px-3">@red["BrojRedova"]</span>
                                             </td>
                                             <td class="text-center pe-3">
-                                                <span class="badge bg-primary rounded-pill px-3">@red["BrojRedova"]</span>
+                                                <div class="btn-group gap-1">
+                                                    <a href="/Home/PregledUvozaRfzo?vremeKljuc=@kljucVremena" class="btn btn-sm btn-outline-primary" title="Прегледај податке">👁️</a>
+                                                    <a href="/Home/ObrisiUvozRfzo?vremeKljuc=@kljucVremena" class="btn btn-sm btn-outline-danger" title="Обриши фајл из базе" onclick="return confirm('Да ли сте сигурни да желите да потпуно обришете овај фајл?')">🗑️</a>
+                                                </div>
                                             </td>
                                         </tr>
                                     }
@@ -105,3 +120,91 @@
         </div>
     </div>
 </div>
+
+<style>
+    .drop-zone {
+        width: 100%;
+        height: 220px;
+        padding: 30px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        border: 2px dashed #1f6f43;
+        border-radius: 8px;
+        background-color: #fcfdfe;
+        cursor: pointer;
+        transition: all 0.2s ease-in-out;
+    }
+    .drop-zone.drag-over {
+        background-color: #e8f5e9;
+        border-color: #2e7d32;
+        transform: scale(1.01);
+    }
+    .excel-icon {
+        font-size: 3.5rem;
+        line-height: 1;
+    }
+</style>
+
+@section Scripts {
+    <script>
+        const dropZone = document.getElementById('drop-zone');
+        const fileInput = document.getElementById('file-input');
+        const periodInput = document.getElementById('period-input');
+        const statusDiv = document.getElementById('upload-status');
+        const dropZoneText = document.getElementById('drop-zone-text');
+
+        document.addEventListener("DOMContentLoaded", () => {
+            const danas = new Date();
+            const godina = danas.getFullYear();
+            const mesec = String(danas.getMonth() + 1).padStart(2, '0');
+            periodInput.value = `${godina}-${mesec}`;
+        });
+
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            dropZone.addEventListener(eventName, e => { e.preventDefault(); e.stopPropagation(); }, false);
+            document.body.addEventListener(eventName, e => { e.preventDefault(); e.stopPropagation(); }, false);
+        });
+
+        ['dragenter', 'dragover'].forEach(eventName => {
+            dropZone.addEventListener(eventName, () => dropZone.classList.add('drag-over'), false);
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            dropZone.addEventListener(eventName, () => dropZone.classList.remove('drag-over'), false);
+        });
+
+        dropZone.addEventListener('drop', e => { 
+            if (e.dataTransfer.files.length > 0) {
+                proveriIVeziFajl(e.dataTransfer.files); 
+            }
+        }, false);
+        
+        fileInput.addEventListener('change', e => { 
+            if (e.target.files.length > 0) {
+                proveriIVeziFajl(e.target.files); 
+            }
+        }, false);
+
+        function proveriIVeziFajl(files) {
+            const file = files[0];
+            const allowed = /(\.xlsx|\.xls)$/i;
+            if (!allowed.exec(file.name)) {
+                statusDiv.textContent = 'Дозвољени су искључиво Excel фајлови (.xlsx, .xls)!';
+                statusDiv.className = 'alert alert-danger mt-3 d-block';
+                fileInput.value = '';
+                dropZoneText.textContent = 'Превуците Excel фајл овде';
+                return;
+            }
+
+            const dataTransfer = new DataTransfer();
+            dataTransfer.items.add(file);
+            fileInput.files = dataTransfer.files;
+
+            statusDiv.textContent = `Изабран фајл: ${file.name}`;
+            statusDiv.className = 'alert alert-info mt-3 d-block';
+            dropZoneText.innerHTML = `✅ Фајл спреман:<br><span class="text-dark small">${file.name}</span>`;
+        }
+    </script>
+}
