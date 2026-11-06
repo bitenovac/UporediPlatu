@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "D:\\Projekti\\Uporedi\\UporediPlate.csproj": {}
+    "D:\\Projekti\\UporediPlatu\\UporediPlate.csproj": {}
   },
   "projects": {
-    "D:\\Projekti\\Uporedi\\UporediPlate.csproj": {
+    "D:\\Projekti\\UporediPlatu\\UporediPlate.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "D:\\Projekti\\Uporedi\\UporediPlate.csproj",
+        "projectUniqueName": "D:\\Projekti\\UporediPlatu\\UporediPlate.csproj",
         "projectName": "UporediPlate",
-        "projectPath": "D:\\Projekti\\Uporedi\\UporediPlate.csproj",
+        "projectPath": "D:\\Projekti\\UporediPlatu\\UporediPlate.csproj",
         "packagesPath": "C:\\Users\\miomir.milutinovic\\.nuget\\packages\\",
-        "outputPath": "D:\\Projekti\\Uporedi\\obj\\",
+        "outputPath": "D:\\Projekti\\UporediPlatu\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "C:\\Users\\miomir.milutinovic\\AppData\\Roaming\\NuGet\\NuGet.Config"
@@ -46,6 +46,14 @@
           "framework": "net10.0",
           "targetAlias": "net10.0",
           "dependencies": {
+            "ExcelDataReader": {
+              "target": "Package",
+              "version": "[3.9.0, )"
+            },
+            "ExcelDataReader.DataSet": {
+              "target": "Package",
+              "version": "[3.9.0, )"
+            },
             "Microsoft.EntityFrameworkCore": {
               "target": "Package",
               "version": "[10.0.14, )"

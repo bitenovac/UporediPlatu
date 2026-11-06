@@ -1,5 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
+using Microsoft.Extensions.Configuration;
+using System.IO;
 
 namespace UporediPlate
 {
@@ -20,16 +22,24 @@ namespace UporediPlate
     }
 
     // 2. FABRIKA ZA KREIRANJE MIGRACIJA (Design-time)
-    // Ovu klasu koristi isključivo EF Core alat u VS Code terminalu
+    // Ovu klasu koristi isključivo EF Core alat u VS Code terminalu (dotnet ef migrations add...)
     public class AppDbContextFactory : IDesignTimeDbContextFactory<AppDbContext>
     {
         public AppDbContext CreateDbContext(string[] args)
         {
+            // Izgradnja konfiguracije kako bi fabrika mogla da pročita User Secrets ili appsettings.json
+            var configuration = new ConfigurationBuilder()
+                .SetBasePath(Directory.GetCurrentDirectory())
+                .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
+                .AddUserSecrets<AppDbContext>() // Povlači bezbedno kreirane parametre sa vašeg računara
+                .Build();
+
             var optionsBuilder = new DbContextOptionsBuilder<AppDbContext>();
             
-            // Konfiguracija: SQL Server Autentifikacija za server 10.20.0.203 i bazu UporediPlate
-            // Zamenite TVOJ_SQL_USER i TVOJA_SQL_LOZINKA sa vašim stvarnim parametrima
-            optionsBuilder.UseSqlServer("Server=10.20.0.203;Database=UporediPlate;User Id=UporediPlate;Password=Pantelej13.;TrustServerCertificate=True;Connect Timeout=15;");
+            // Povlačenje bezbednog konekcionog niza
+            var connectionString = configuration.GetConnectionString("DefaultConnection");
+            
+            optionsBuilder.UseSqlServer(connectionString);
 
             return new AppDbContext(optionsBuilder.Options);
         }
