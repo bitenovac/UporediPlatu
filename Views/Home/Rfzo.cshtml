@@ -1,4 +1,5 @@
-@model List<UporediPlate.Models.RfzoIstorijaViewModel>
+@using System.Data
+@model DataTable
 
 @{
     ViewData["Title"] = "РФЗО - Увоз података";
@@ -8,7 +9,7 @@
     <div class="row">
         <div class="col-12">
             <h2 class="mb-3 text-success fw-bold">Страница РФЗО</h2>
-            <p class="lead text-muted">Изаберите обрачунски период, а затим превуците или учитајте званичне Excel табеле.</p>
+            <p class="lead text-muted">Изаберите обрачунски период и учитајте званичну Excel табелу.</p>
             <hr />
         </div>
     </div>
@@ -17,56 +18,31 @@
         <div class="col-md-8">
             <div class="card shadow-lg border-0 mb-4">
                 <div class="card-header text-white py-3" style="background-color: #1f6f43;">
-                    <h5 class="mb-0 d-flex align-items-center gap-2">
-                        📄 Учитавање РФЗО Excel табеле
-                    </h5>
+                    <h5 class="mb-0">📄 Учитавање РФЗО Excel табеле</h5>
                 </div>
                 <div class="card-body p-4">
                     
-                    <!-- Параметри за ручну промену месеца и године -->
-                    <div class="row g-3 mb-4 bg-light p-3 rounded border">
-                        <div class="col-12">
-                            <label class="form-label fw-bold text-secondary mb-1">Обрачунски период за који се уноси плата:</label>
+                    <form action="/Home/ObradiUvozRfzo" method="post" enctype="multipart/form-data">
+                        
+                        <div class="row g-3 mb-4 bg-light p-3 rounded border">
+                            <div class="col-12">
+                                <label class="form-label fw-bold text-secondary mb-1">Обрачунски период за који се уноси плата:</label>
+                            </div>
+                            <div class="col-sm-12">
+                                <input type="month" name="period" class="form-control border-success" required />
+                                <small class="text-muted">Изаберите месец и годину из календара</small>
+                            </div>
                         </div>
-                        <div class="col-sm-6">
-                            <select id="period-mesec" class="form-select border-success">
-                                <option value="1">Јануар</option>
-                                <option value="2">Фебруар</option>
-                                <option value="3">Март</option>
-                                <option value="4">Април</option>
-                                <option value="5">Мај</option>
-                                <option value="6">Јун</option>
-                                <option value="7">Јул</option>
-                                <option value="8">Август</option>
-                                <option value="9">Септембар</option>
-                                <option value="10">Октоabar</option>
-                                <option value="11">Новембар</option>
-                                <option value="12">Децембар</option>
-                            </select>
+                        
+                        <div class="mb-4">
+                            <label class="form-label fw-bold text-secondary">Изаберите Excel фајл са рачунара (.xlsx, .xls):</label>
+                            <input type="file" name="excelFajl" class="form-control border-success" accept=".xlsx, .xls" required />
                         </div>
-                        <div class="col-sm-6">
-                            <select id="period-godina" class="form-select border-success">
-                                <!-- Попуњава се динамички кроз JavaScript -->
-                            </select>
-                        </div>
-                    </div>
-                    
-                    <!-- Drag & Drop Поље -->
-                    <div id="drop-zone" class="drop-zone">
-                        <div class="drop-zone-content">
-                            <div class="excel-icon mb-3">📁</div> 
-                            <h5 class="fw-bold">Превуците Excel фајл овде</h5>
-                            <p class="text-muted small">Подржани формати: .xlsx, .xls</p>
-                            <span class="d-block my-2 text-muted">или</span>
-                            <button type="button" class="btn btn-success btn-sm px-4" onclick="document.getElementById('file-input').click()">
-                                Изаберите са рачунара
-                            </button>
-                        </div>
-                        <input type="file" id="file-input" accept=".xlsx, .xls" style="display: none;" />
-                    </div>
 
-                    <!-- Статусна порука -->
-                    <div id="upload-status" class="alert mt-4 d-none" role="alert"></div>
+                        <button type="submit" class="btn btn-success w-100 py-2 fw-bold">
+                            🚀 Покрени увоз података
+                        </button>
+                    </form>
 
                 </div>
             </div>
@@ -78,12 +54,10 @@
         <div class="col-md-8">
             <div class="card shadow border-0 mb-5">
                 <div class="card-header bg-secondary text-white py-3">
-                    <h5 class="mb-0 d-flex align-items-center gap-2">
-                        📊 Историја учитаних РФЗО фајлова
-                    </h5>
+                    <h5 class="mb-0">📊 Историја учитаних РФЗО фајлова</h5>
                 </div>
                 <div class="card-body p-0">
-                    @if (Model == null || !Model.Any())
+                    @if (Model == null || Model.Rows.Count == 0)
                     {
                         <div class="p-4 text-center text-muted">
                             <p class="mb-0">Нема евидентираних учитавања у бази података.</p>
@@ -102,20 +76,23 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    @foreach (var fajl in Model)
+                                    @foreach (DataRow red in Model.Rows)
                                     {
+                                        DateTime period = Convert.ToDateTime(red["PeriodUvoza"]);
+                                        DateTime datumUvoza = Convert.ToDateTime(red["DatumUvozaPodataka"]);
+
                                         <tr>
                                             <td class="fw-bold text-success ps-3">
-                                                🟢 @fajl.NazivFajla
+                                                🟢 @red["NazivFajla"]
                                             </td>
                                             <td>
-                                                @fajl.PeriodUvoza.ToString("MM/yyyy")
+                                                @period.ToString("MM/yyyy")
                                             </td>
                                             <td class="text-muted">
-                                                @fajl.DatumUvozaPodataka.ToString("dd.MM.yyyy HH:mm:ss")
+                                                @datumUvoza.ToString("dd.MM.yyyy HH:mm:ss")
                                             </td>
                                             <td class="text-center pe-3">
-                                                <span class="badge bg-primary rounded-pill px-3">@fajl.BrojRedova</span>
+                                                <span class="badge bg-primary rounded-pill px-3">@red["BrojRedova"]</span>
                                             </td>
                                         </tr>
                                     }
@@ -128,101 +105,3 @@
         </div>
     </div>
 </div>
-
-<style>
-    .drop-zone {
-        width: 100%;
-        height: 220px;
-        padding: 30px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        text-align: center;
-        border: 2px dashed #1f6f43;
-        border-radius: 8px;
-        background-color: #fcfdfe;
-        cursor: pointer;
-        transition: all 0.2s ease-in-out;
-    }
-    .drop-zone.drag-over {
-        background-color: #e8f5e9;
-        border-color: #2e7d32;
-        transform: scale(1.01);
-    }
-    .excel-icon {
-        font-size: 3.5rem;
-        line-height: 1;
-    }
-</style>
-
-@section Scripts {
-    <script>
-        const dropZone = document.getElementById('drop-zone');
-        const fileInput = document.getElementById('file-input');
-        const statusDiv = document.getElementById('upload-status');
-        const mesecSelect = document.getElementById('period-mesec');
-        const trackingGodina = document.getElementById('period-godina');
-
-        document.addEventListener("DOMContentLoaded", () => {
-            const danas = new Date();
-            const trenutnaGodina = danas.getFullYear();
-            
-            for (let g = trenutnaGodina + 1; g >= trenutnaGodina - 2; g--) {
-                const opt = document.createElement('option');
-                opt.value = g;
-                opt.textContent = g + ". година";
-                if (g === trenutnaGodina) opt.selected = true;
-                trackingGodina.appendChild(opt);
-            }
-
-            let predlozeniMesec = danas.getMonth();
-            if (predlozeniMesec === 0) {
-                mesecSelect.value = "12";
-                trackingGodina.value = (trenutnaGodina - 1).toString();
-            } else {
-                mesecSelect.value = predlozeniMesec.toString();
-            }
-        });
-
-        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-            dropZone.addEventListener(eventName, e => { e.preventDefault(); e.stopPropagation(); }, false);
-            document.body.addEventListener(eventName, e => { e.preventDefault(); e.stopPropagation(); }, false);
-        });
-
-        ['dragenter', 'dragover'].forEach(eventName => {
-            dropZone.addEventListener(eventName, () => dropZone.classList.add('drag-over'), false);
-        });
-
-        ['dragleave', 'drop'].forEach(eventName => {
-            dropZone.addEventListener(eventName, () => dropZone.classList.remove('drag-over'), false);
-        });
-
-        dropZone.addEventListener('drop', e => { 
-            if (e.dataTransfer.files.length > 0) {
-                uploadFile(e.dataTransfer.files[0]); 
-            }
-        }, false);
-        
-        fileInput.addEventListener('change', e => { 
-            if (e.target.files.length > 0) {
-                uploadFile(e.target.files[0]); 
-            }
-        }, false);
-
-        function uploadFile(file) {
-            const allowed = /(\.xlsx|\.xls)$/i;
-            if (!allowed.exec(file.name)) {
-                prikaziStatus('Дозвољени су искључиво Excel фајлови (.xlsx, .xls)!', 'danger');
-                return;
-            }
-
-            const izabraniMesec = mesecSelect.value;
-            const izabranaGodina = trackingGodina.value;
-            const periodDatum = `${izabranaGodina}-${izabraniMesec.padStart(2, '0')}-01`;
-
-            const formData = new FormData();
-            formData.append('excelFajl', file);
-            formData.append('period', periodDatum);
-
-            prikaziStatus('Слање и обрада фајла у току...', 'info');
-

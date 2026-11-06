@@ -17,7 +17,7 @@ namespace UporediPlate.Controllers
         private readonly AppDbContext _context;
         private readonly ILogger<HomeController> _logger;
 
-        // Повезујемо базу података кроз конструктор
+        // Конструктор за повезивање базе података
         public HomeController(AppDbContext context, ILogger<HomeController> logger)
         {
             _context = context;
@@ -36,22 +36,44 @@ namespace UporediPlate.Controllers
             return View();
         }
 
-        // 3. Страница за РФЗО - Чита јединствене увозе за историју у табели
+        // 3. Страница за РФЗО - СИГУРНО ЧИТАЊЕ ИСТОРИЈЕ ПРЕКО DATATABLE
         public IActionResult Rfzo()
         {
-            var istorijaUvoza = _context.RfzoUvozi
-                .GroupBy(x => new { x.NazivFajla, x.PeriodUvoza, x.DatumUvozaPodataka })
-                .Select(g => new RfzoIstorijaViewModel
-                {
-                    NazivFajla = g.Key.NazivFajla ?? "Непознат назив",
-                    PeriodUvoza = g.Key.PeriodUvoza,
-                    DatumUvozaPodataka = g.Key.DatumUvozaPodataka,
-                    BrojRedova = g.Count()
-                })
-                .OrderByDescending(x => x.DatumUvozaPodataka)
-                .ToList();
+            // Прављење чисте празне табеле у меморији
+            DataTable dtIstorija = new DataTable();
+            dtIstorija.Columns.Add("NazivFajla", typeof(string));
+            dtIstorija.Columns.Add("PeriodUvoza", typeof(DateTime));
+            dtIstorija.Columns.Add("DatumUvozaPodataka", typeof(DateTime));
+            dtIstorija.Columns.Add("BrojRedova", typeof(int));
 
-            return View(istorijaUvoza);
+            try
+            {
+                // Груписање података директно из базе
+                var grupe = _context.RfzoUvozi
+                    .GroupBy(x => new { x.NazivFajla, x.PeriodUvoza, x.DatumUvozaPodataka })
+                    .Select(g => new
+                    {
+                        NazivFajla = g.Key.NazivFajla ?? "Непознат назив",
+                        PeriodUvoza = g.Key.PeriodUvoza,
+                        DatumUvozaPodataka = g.Key.DatumUvozaPodataka,
+                        BrojRedova = g.Count()
+                    })
+                    .OrderByDescending(x => x.DatumUvozaPodataka)
+                    .ToList();
+
+                // Пуњење меморијске табеле подацима из базе
+                foreach (var g in grupe)
+                {
+                    dtIstorija.Rows.Add(g.NazivFajla, g.PeriodUvoza, g.DatumUvozaPodataka, g.BrojRedova);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Грешка приликом читања историје из базе.");
+            }
+
+            // Прослеђујемо табелу погледу (View)
+            return View(dtIstorija);
         }
 
         // 4. Страница за Креирање извештаја
@@ -67,19 +89,19 @@ namespace UporediPlate.Controllers
             return RedirectToAction("Zu");
         }
 
-        // КОМПЛЕТНА ИСПРАВНА АКЦИЈА ЗА УВОЗ РФЗО ТАБЕЛЕ СA ИСТОРИЈОМ
+        // КОМПЛЕТНА СИГУРНА АКЦИЈА ЗА УВОЗ РФЗО ТАБЕЛЕ
         [HttpPost]
         public async Task<IActionResult> ObradiUvozRfzo(DateTime period, IFormFile excelFajl)
         {
             if (excelFajl == null || excelFajl.Length == 0)
             {
-                return Json(new { success = false, message = "Грешка: Фајл није примљен или је празан." });
+                return RedirectToAction("Rfzo");
             }
 
             var ekstenzija = Path.GetExtension(excelFajl.FileName).ToLowerInvariant();
             if (ekstenzija != ".xlsx" && ekstenzija != ".xls")
             {
-                return Json(new { success = false, message = "Грешка: Дозвољени су само Excel фајлови (.xlsx, .xls)." });
+                return RedirectToAction("Rfzo");
             }
 
             System.Text.Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
@@ -99,7 +121,7 @@ namespace UporediPlate.Controllers
                             ConfigureDataTable = (_) => new ExcelDataTableConfiguration() { UseHeaderRow = true }
                         });
 
-                        DataTable tabela = result.Tables[0]; // Узимамо први Sheet
+                        DataTable tabela = result.Tables[0]; // Узимамо први Sheet из Excel-a
 
                         foreach (DataRow red in tabela.Rows)
                         {
@@ -161,15 +183,12 @@ namespace UporediPlate.Controllers
                     }
                 }
 
-                return Json(new { 
-                    success = true, 
-                    message = $"Успех: Фајл '{excelFajl.FileName}' за период {period:MM/yyyy} је успешно увезен у базу података!" 
-                });
+                return RedirectToAction("Rfzo");
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Грешка приликом слања РФЗО Excel фајла.");
-                return Json(new { success = false, message = $"Системска грешка: {ex.Message}" });
+                return RedirectToAction("Rfzo");
             }
         }
 
