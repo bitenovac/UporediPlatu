@@ -1,3 +1,5 @@
+@model List<UporediPlate.Models.RfzoIstorijaViewModel>
+
 @{
     ViewData["Title"] = "РФЗО - Увоз података";
 }
@@ -6,21 +8,48 @@
     <div class="row">
         <div class="col-12">
             <h2 class="mb-3 text-success fw-bold">Страница РФЗО</h2>
-            <p class="lead text-muted">Превуците или учитајте званичне Excel табеле Републичког фонда за здравствено осигурање.</p>
+            <p class="lead text-muted">Изаберите обрачунски период, а затим превуците или учитајте званичне Excel табеле.</p>
             <hr />
         </div>
     </div>
 
-    <!-- Зона за превлачење и учитавање фајлова -->
     <div class="row justify-content-center mt-3">
         <div class="col-md-8">
-            <div class="card shadow-lg border-0">
+            <div class="card shadow-lg border-0 mb-4">
                 <div class="card-header text-white py-3" style="background-color: #1f6f43;">
                     <h5 class="mb-0 d-flex align-items-center gap-2">
                         📄 Учитавање РФЗО Excel табеле
                     </h5>
                 </div>
-                <div class="card-body p-5">
+                <div class="card-body p-4">
+                    
+                    <!-- Параметри за ручну промену месеца и године -->
+                    <div class="row g-3 mb-4 bg-light p-3 rounded border">
+                        <div class="col-12">
+                            <label class="form-label fw-bold text-secondary mb-1">Обрачунски период за који се уноси плата:</label>
+                        </div>
+                        <div class="col-sm-6">
+                            <select id="period-mesec" class="form-select border-success">
+                                <option value="1">Јануар</option>
+                                <option value="2">Фебруар</option>
+                                <option value="3">Март</option>
+                                <option value="4">Април</option>
+                                <option value="5">Мај</option>
+                                <option value="6">Јун</option>
+                                <option value="7">Јул</option>
+                                <option value="8">Август</option>
+                                <option value="9">Септембар</option>
+                                <option value="10">Октобар</option>
+                                <option value="11">Новембар</option>
+                                <option value="12">Децембар</option>
+                            </select>
+                        </div>
+                        <div class="col-sm-6">
+                            <select id="period-godina" class="form-select border-success">
+                                <!-- Попуњава се динамички кроз JavaScript -->
+                            </select>
+                        </div>
+                    </div>
                     
                     <!-- Drag & Drop Поље -->
                     <div id="drop-zone" class="drop-zone">
@@ -43,13 +72,67 @@
             </div>
         </div>
     </div>
+
+    <!-- ТАБЕЛА ИСТОРИЈЕ ИСПОД ПОЉА ЗА УБАЦИВАЊЕ -->
+    <div class="row justify-content-center mt-4">
+        <div class="col-md-8">
+            <div class="card shadow border-0 mb-5">
+                <div class="card-header bg-secondary text-white py-3">
+                    <h5 class="mb-0 d-flex align-items-center gap-2">
+                        📊 Историја учитаних РФЗО фајлова
+                    </h5>
+                </div>
+                <div class="card-body p-0">
+                    @if (Model == null || !Model.Any())
+                    {
+                        <div class="p-4 text-center text-muted">
+                            <p class="mb-0">Нема евидентираних учитавања у бази података.</p>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-hover table-striped mb-0 align-middle">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th class="ps-3">Назив увезеног фајла</th>
+                                        <th>Обрачунски период</th>
+                                        <th>Датум и време увоза</th>
+                                        <th class="text-center pe-3">Број записа</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var fajl in Model)
+                                    {
+                                        <tr>
+                                            <td class="fw-bold text-success ps-3">
+                                                🟢 @fajl.NazivFajla
+                                            </td>
+                                            <td>
+                                                @fajl.PeriodUvoza.ToString("MM/yyyy")
+                                            </td>
+                                            <td class="text-muted">
+                                                @fajl.DatumUvozaPodataka.ToString("dd.MM.yyyy HH:mm:ss")
+                                            </td>
+                                            <td class="text-center pe-3">
+                                                <span class="badge bg-primary rounded-pill px-3">@fajl.BrojRedova</span>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
-<!-- Стилизовање зоне -->
 <style>
     .drop-zone {
         width: 100%;
-        height: 250px;
+        height: 220px;
         padding: 30px;
         display: flex;
         align-items: center;
@@ -77,6 +160,30 @@
         const dropZone = document.getElementById('drop-zone');
         const fileInput = document.getElementById('file-input');
         const statusDiv = document.getElementById('upload-status');
+        const mesecSelect = document.getElementById('period-mesec');
+        const trackingGodina = document.getElementById('period-godina');
+
+        // Динамичко попуњавање година и постављање предлога за период
+        document.addEventListener("DOMContentLoaded", () => {
+            const danas = new Date();
+            const trenutnaGodina = danas.getFullYear();
+            
+            for (let g = trenutnaGodina + 1; g >= trenutnaGodina - 2; g--) {
+                const opt = document.createElement('option');
+                opt.value = g;
+                opt.textContent = g + ". година";
+                if (g === trenutnaGodina) opt.selected = true;
+                trackingGodina.appendChild(opt);
+            }
+
+            let predlozeniMesec = danas.getMonth(); // getMonth() враћа 0-11
+            if (predlozeniMesec === 0) {
+                mesecSelect.value = "12";
+                trackingGodina.value = (trenutnaGodina - 1).toString();
+            } else {
+                mesecSelect.value = predlozeniMesec.toString();
+            }
+        });
 
         // Спречавање отварања фајла у претраживачу
         ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
@@ -84,7 +191,6 @@
             document.body.addEventListener(eventName, e => { e.preventDefault(); e.stopPropagation(); }, false);
         });
 
-        // Ефекат превлачења преко зоне
         ['dragenter', 'dragover'].forEach(eventName => {
             dropZone.addEventListener(eventName, () => dropZone.classList.add('drag-over'), false);
         });
@@ -93,49 +199,28 @@
             dropZone.addEventListener(eventName, () => dropZone.classList.remove('drag-over'), false);
         });
 
-        // Ослушкивање акција (Drop или клик)
-        dropZone.addEventListener('drop', e => { if (e.dataTransfer.files.length > 0) uploadFile(e.dataTransfer.files[0]); }, false);
-        fileInput.addEventListener('change', e => { if (e.target.files.length > 0) uploadFile(e.target.files[0]); }, false);
+        dropZone.addEventListener('drop', e => { 
+            if (e.dataTransfer.files.length > 0) {
+                uploadFile(e.dataTransfer.files[0]); 
+            }
+        }, false);
+        
+        fileInput.addEventListener('change', e => { 
+            if (e.target.files.length > 0) {
+                uploadFile(e.target.files[0]); 
+            }
+        }, false);
 
         function uploadFile(file) {
-            // Валидација екстензије
             const allowed = /(\.xlsx|\.xls)$/i;
             if (!allowed.exec(file.name)) {
                 prikaziStatus('Дозвољени су искључиво Excel фајлови (.xlsx, .xls)!', 'danger');
                 return;
             }
 
+            const izabraniMesec = mesecSelect.value;
+            const izabranaGodina = trackingGodina.value;
+            const periodDatum = `${izabranaGodina}-${izabraniMesec.padStart(2, '0')}-01`;
+
             const formData = new FormData();
-            // Кључ 'excelFajl' мора бити идентичан имену параметра у C# методи
             formData.append('excelFajl', file);
-            
-            // Пошто акција очекује и 'period', прослеђујемо тренутни датум као пример
-            formData.append('period', new Date().toISOString());
-
-            prikaziStatus('Слање и обрада фајла у току...', 'info');
-
-            // Позивање тачне акције унутар HomeController-а
-            fetch('/Home/ObradiUvozRfzo', {
-                method: 'POST',
-                body: formData
-            })
-            .then(res => res.json())
-            .then(data => {
-                if (data.success) {
-                    prikaziStatus(data.message, 'success');
-                } else {
-                    prikaziStatus(data.message, 'danger');
-                }
-            })
-            .catch(err => {
-                console.error(err);
-                prikaziStatus('Дошко је до грешке на мрежи или серверу.', 'danger');
-            });
-        }
-
-        function prikaziStatus(poruka, tip) {
-            statusDiv.textContent = poruka;
-            statusDiv.className = `alert mt-3 d-block alert-${tip}`;
-        }
-    </script>
-}
