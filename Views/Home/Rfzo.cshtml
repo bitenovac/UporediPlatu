@@ -39,7 +39,7 @@
                                 <option value="7">Јул</option>
                                 <option value="8">Август</option>
                                 <option value="9">Септембар</option>
-                                <option value="10">Октобар</option>
+                                <option value="10">Октоabar</option>
                                 <option value="11">Новембар</option>
                                 <option value="12">Децембар</option>
                             </select>
@@ -163,7 +163,6 @@
         const mesecSelect = document.getElementById('period-mesec');
         const trackingGodina = document.getElementById('period-godina');
 
-        // Динамичко попуњавање година и постављање предлога за период
         document.addEventListener("DOMContentLoaded", () => {
             const danas = new Date();
             const trenutnaGodina = danas.getFullYear();
@@ -176,7 +175,7 @@
                 trackingGodina.appendChild(opt);
             }
 
-            let predlozeniMesec = danas.getMonth(); // getMonth() враћа 0-11
+            let predlozeniMesec = danas.getMonth();
             if (predlozeniMesec === 0) {
                 mesecSelect.value = "12";
                 trackingGodina.value = (trenutnaGodina - 1).toString();
@@ -185,7 +184,6 @@
             }
         });
 
-        // Спречавање отварања фајла у претраживачу
         ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
             dropZone.addEventListener(eventName, e => { e.preventDefault(); e.stopPropagation(); }, false);
             document.body.addEventListener(eventName, e => { e.preventDefault(); e.stopPropagation(); }, false);
@@ -224,3 +222,7 @@
 
             const formData = new FormData();
             formData.append('excelFajl', file);
+            formData.append('period', periodDatum);
+
+            prikaziStatus('Слање и обрада фајла у току...', 'info');
+
