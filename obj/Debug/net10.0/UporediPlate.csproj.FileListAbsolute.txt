@@ -672,3 +672,5 @@ D:\Projekti\UporediPlatu\obj\Debug\net10.0\refint\UporediPlate.dll
 D:\Projekti\UporediPlatu\obj\Debug\net10.0\UporediPlate.pdb
 D:\Projekti\UporediPlatu\obj\Debug\net10.0\UporediPlate.genruntimeconfig.cache
 D:\Projekti\UporediPlatu\obj\Debug\net10.0\ref\UporediPlate.dll
+D:\Projekti\UporediPlatu\bin\Debug\net10.0\ExcelDataReader.dll
+D:\Projekti\UporediPlatu\bin\Debug\net10.0\ExcelDataReader.DataSet.dll
