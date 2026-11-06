@@ -20,53 +20,53 @@ build_property.TargetFrameworkVersion = v10.0
 build_property.EntryPointFilePath = 
 build_property.RootNamespace = UporediPlate
 build_property.RootNamespace = UporediPlate
-build_property.ProjectDir = D:\Projekti\Uporedi\
+build_property.ProjectDir = D:\Projekti\UporediPlatu\
 build_property.EnableComHosting = 
 build_property.EnableGeneratedComInterfaceComImportInterop = 
 build_property.RazorLangVersion = 10.0
 build_property.SupportLocalizedComponentNames = 
 build_property.GenerateRazorMetadataSourceChecksumAttributes = 
-build_property.MSBuildProjectDirectory = D:\Projekti\Uporedi
+build_property.MSBuildProjectDirectory = D:\Projekti\UporediPlatu
 build_property._RazorSourceGeneratorDebug = 
 build_property.EffectiveAnalysisLevelStyle = 10.0
 build_property.EnableCodeStyleSeverity = 
 
-[D:/Projekti/Uporedi/Views/Home/Index.cshtml]
+[D:/Projekti/UporediPlatu/Views/Home/Index.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcSG9tZVxJbmRleC5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
 
-[D:/Projekti/Uporedi/Views/Home/KreirajIzvestaj.cshtml]
+[D:/Projekti/UporediPlatu/Views/Home/KreirajIzvestaj.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcSG9tZVxLcmVpcmFqSXp2ZXN0YWouY3NodG1s
 build_metadata.AdditionalFiles.CssScope = 
 
-[D:/Projekti/Uporedi/Views/Home/Privacy.cshtml]
+[D:/Projekti/UporediPlatu/Views/Home/Privacy.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcSG9tZVxQcml2YWN5LmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 
 
-[D:/Projekti/Uporedi/Views/Home/Rfzo.cshtml]
+[D:/Projekti/UporediPlatu/Views/Home/Rfzo.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcSG9tZVxSZnpvLmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 
 
-[D:/Projekti/Uporedi/Views/Home/Zu.cshtml]
+[D:/Projekti/UporediPlatu/Views/Home/Zu.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcSG9tZVxadS5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
 
-[D:/Projekti/Uporedi/Views/Shared/Error.cshtml]
+[D:/Projekti/UporediPlatu/Views/Shared/Error.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2hhcmVkXEVycm9yLmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 
 
-[D:/Projekti/Uporedi/Views/Shared/_ValidationScriptsPartial.cshtml]
+[D:/Projekti/UporediPlatu/Views/Shared/_ValidationScriptsPartial.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2hhcmVkXF9WYWxpZGF0aW9uU2NyaXB0c1BhcnRpYWwuY3NodG1s
 build_metadata.AdditionalFiles.CssScope = 
 
-[D:/Projekti/Uporedi/Views/_ViewImports.cshtml]
+[D:/Projekti/UporediPlatu/Views/_ViewImports.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcX1ZpZXdJbXBvcnRzLmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 
 
-[D:/Projekti/Uporedi/Views/_ViewStart.cshtml]
+[D:/Projekti/UporediPlatu/Views/_ViewStart.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcX1ZpZXdTdGFydC5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
 
-[D:/Projekti/Uporedi/Views/Shared/_Layout.cshtml]
+[D:/Projekti/UporediPlatu/Views/Shared/_Layout.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2hhcmVkXF9MYXlvdXQuY3NodG1s
 build_metadata.AdditionalFiles.CssScope = b-lyxgud4eyy
