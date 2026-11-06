@@ -17,29 +17,17 @@ namespace UporediPlate.Controllers
         private readonly AppDbContext _context;
         private readonly ILogger<HomeController> _logger;
 
-        // Конструктор за повезивање базе података
         public HomeController(AppDbContext context, ILogger<HomeController> logger)
         {
             _context = context;
             _logger = logger;
         }
 
-        // 1. Почетна страница (Index)
-        public IActionResult Index()
-        {
-            return View();
-        }
+        public IActionResult Index() => View();
+        public IActionResult Zu() => View();
 
-        // 2. Страница за Здравствене установе (ЗУ)
-        public IActionResult Zu()
-        {
-            return View();
-        }
-
-        // 3. Страница за РФЗО - СИГУРНО ЧИТАЊЕ ИСТОРИЈЕ ПРЕКО DATATABLE
         public IActionResult Rfzo()
         {
-            // Прављење чисте празне табеле у меморији
             DataTable dtIstorija = new DataTable();
             dtIstorija.Columns.Add("NazivFajla", typeof(string));
             dtIstorija.Columns.Add("PeriodUvoza", typeof(DateTime));
@@ -48,7 +36,6 @@ namespace UporediPlate.Controllers
 
             try
             {
-                // Груписање података директно из базе
                 var grupe = _context.RfzoUvozi
                     .GroupBy(x => new { x.NazivFajla, x.PeriodUvoza, x.DatumUvozaPodataka })
                     .Select(g => new
@@ -61,7 +48,6 @@ namespace UporediPlate.Controllers
                     .OrderByDescending(x => x.DatumUvozaPodataka)
                     .ToList();
 
-                // Пуњење меморијске табеле подацима из базе
                 foreach (var g in grupe)
                 {
                     dtIstorija.Rows.Add(g.NazivFajla, g.PeriodUvoza, g.DatumUvozaPodataka, g.BrojRedova);
@@ -69,40 +55,27 @@ namespace UporediPlate.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Грешка приликом читања историје из базе.");
+                _logger.LogError(ex, "Грешка приликом читања историје.");
             }
 
-            // Прослеђујемо табелу погледу (View)
             return View(dtIstorija);
         }
 
-        // 4. Страница за Креирање извештаја
-        public IActionResult KreirajIzvestaj()
-        {
-            return View();
-        }
+        public IActionResult KreirajIzvestaj() => View();
 
-        // Празне метод акције за прихват увоза (биће допуњене логиком касније)
         [HttpPost]
         public IActionResult ObradiUvozZu(int ustanovaId, DateTime period, IFormFile excelFajl)
         {
             return RedirectToAction("Zu");
         }
 
-        // КОМПЛЕТНА СИГУРНА АКЦИЈА ЗА УВОЗ РФЗО ТАБЕЛЕ
         [HttpPost]
         public async Task<IActionResult> ObradiUvozRfzo(DateTime period, IFormFile excelFajl)
         {
-            if (excelFajl == null || excelFajl.Length == 0)
-            {
-                return RedirectToAction("Rfzo");
-            }
+            if (excelFajl == null || excelFajl.Length == 0) return RedirectToAction("Rfzo");
 
             var ekstenzija = Path.GetExtension(excelFajl.FileName).ToLowerInvariant();
-            if (ekstenzija != ".xlsx" && ekstenzija != ".xls")
-            {
-                return RedirectToAction("Rfzo");
-            }
+            if (ekstenzija != ".xlsx" && ekstenzija != ".xls") return RedirectToAction("Rfzo");
 
             System.Text.Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
             DateTime trenutnoVremeUvoza = DateTime.Now;
@@ -121,16 +94,12 @@ namespace UporediPlate.Controllers
                             ConfigureDataTable = (_) => new ExcelDataTableConfiguration() { UseHeaderRow = true }
                         });
 
-                        DataTable tabela = result.Tables[0]; // Узимамо први Sheet из Excel-a
+                        DataTable tabela = result.Tables[0]; 
 
                         foreach (DataRow red in tabela.Rows)
                         {
                             string siroviJmbg = red["jmbg"]?.ToString()?.Split('.')?.FirstOrDefault()?.Trim() ?? "";
-                            if (siroviJmbg.Length == 12)
-                            {
-                                siroviJmbg = "0" + siroviJmbg;
-                            }
-
+                            if (siroviJmbg.Length == 12) siroviJmbg = "0" + siroviJmbg;
                             if (string.IsNullOrEmpty(siroviJmbg)) continue;
 
                             var noviZapis = new RfzoUvoz
@@ -178,21 +147,59 @@ namespace UporediPlate.Controllers
 
                             _context.RfzoUvozi.Add(noviZapis);
                         }
-
                         await _context.SaveChangesAsync();
                     }
                 }
-
                 return RedirectToAction("Rfzo");
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Грешка приликом слања РФЗО Excel фајла.");
+                _logger.LogError(ex, "Грешка приликом увоза.");
                 return RedirectToAction("Rfzo");
             }
         }
 
-        // Помоћне методе за конверзију датума и децимала
+        public async Task<IActionResult> ObrisiUvozRfzo(string vremeKljuc)
+        {
+            try
+            {
+                var sviZapisi = _context.RfzoUvozi.ToList();
+                var zaBrisanje = sviZapisi.Where(x => x.DatumUvozaPodataka.ToString("yyyyMMddHHmmssfff") == vremeKljuc).ToList();
+
+                if (zaBrisanje.Any())
+                {
+                    _context.RfzoUvozi.RemoveRange(zaBrisanje);
+                    await _context.SaveChangesAsync();
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Грешка приликом брисања.");
+            }
+            return RedirectToAction("Rfzo");
+        }
+
+        public IActionResult PregledUvozaRfzo(string vremeKljuc)
+        {
+            try
+            {
+                var sviZapisi = _context.RfzoUvozi.ToList();
+                var radnici = sviZapisi.Where(x => x.DatumUvozaPodataka.ToString("yyyyMMddHHmmssfff") == vremeKljuc).OrderBy(x => x.Prezime).ThenBy(x => x.Ime).ToList();
+
+                if (radnici.Any())
+                {
+                    ViewBag.NazivFajla = radnici.First().NazivFajla;
+                    ViewBag.Period = radnici.First().PeriodUvoza.ToString("MM/yyyy");
+                    return View(radnici);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Грешка приликом отварања прегледа.");
+            }
+            return RedirectToAction("Rfzo");
+        }
+
         private DateTime? KonvertujExcelDatum(object obj)
         {
             if (obj == null || string.IsNullOrWhiteSpace(obj.ToString())) return null;
@@ -208,7 +215,6 @@ namespace UporediPlate.Controllers
             return null;
         }
 
-        // Фабричка страница за приказ грешака у систему
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
         public IActionResult Error()
         {
