@@ -51,7 +51,7 @@
 
                         <div id="upload-status" class="alert d-none mb-3" role="alert"></div>
 
-                        <button type="submit" class="btn btn-success w-100 py-2 fw-bold shadow-sm">
+                        <button type="submit" id="submit-btn" class="btn btn-success w-100 py-2 fw-bold shadow-sm">
                             🚀 Покрени увоз података
                         </button>
                     </form>
@@ -91,7 +91,7 @@
                                 <tbody>
                                     @foreach (DataRow red in Model.Rows)
                                     {
-                                        string nazivFajla = red["NazivFajla"].ToString();
+                                        string? nazivFajla = red["NazivFajla"]?.ToString();
                                         DateTime period = Convert.ToDateTime(red["PeriodUvoza"]);
                                         DateTime datumUvoza = Convert.ToDateTime(red["DatumUvozaPodataka"]);
                                         string kljucVremena = datumUvoza.ToString("yyyyMMddHHmmssfff");
@@ -154,6 +154,8 @@
         const periodInput = document.getElementById('period-input');
         const statusDiv = document.getElementById('upload-status');
         const dropZoneText = document.getElementById('drop-zone-text');
+        const rfzoForm = document.getElementById('rfzo-form');
+        const submitBtn = document.getElementById('submit-btn');
 
         document.addEventListener("DOMContentLoaded", () => {
             const danas = new Date();
@@ -175,36 +177,31 @@
             dropZone.addEventListener(eventName, () => dropZone.classList.remove('drag-over'), false);
         });
 
-        dropZone.addEventListener('drop', e => { 
-            if (e.dataTransfer.files.length > 0) {
-                proveriIVeziFajl(e.dataTransfer.files); 
+        dropZone.addEventListener('drop', e => {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            if (files.length > 0) {
+                fileInput.files = files;
+                prikaziIzabraniFajl(files[0].name);
             }
-        }, false);
-        
-        fileInput.addEventListener('change', e => { 
-            if (e.target.files.length > 0) {
-                proveriIVeziFajl(e.target.files); 
+        });
+
+        fileInput.addEventListener('change', () => {
+            if (fileInput.files.length > 0) {
+                prikaziIzabraniFajl(fileInput.files[0].name);
             }
-        }, false);
+        });
 
-        function proveriIVeziFajl(files) {
-            const file = files[0];
-            const allowed = /(\.xlsx|\.xls)$/i;
-            if (!allowed.exec(file.name)) {
-                statusDiv.textContent = 'Дозвољени су искључиво Excel фајлови (.xlsx, .xls)!';
-                statusDiv.className = 'alert alert-danger mt-3 d-block';
-                fileInput.value = '';
-                dropZoneText.textContent = 'Превуците Excel фајл овде';
-                return;
-            }
-
-            const dataTransfer = new DataTransfer();
-            dataTransfer.items.add(file);
-            fileInput.files = dataTransfer.files;
-
-            statusDiv.textContent = `Изабран фајл: ${file.name}`;
-            statusDiv.className = 'alert alert-info mt-3 d-block';
-            dropZoneText.innerHTML = `✅ Фајл спреман:<br><span class="text-dark small">${file.name}</span>`;
+        function prikaziIzabraniFajl(imeFajla) {
+            dropZoneText.innerText = `Изабран фајл: ${imeFajla}`;
+            statusDiv.className = "alert alert-info mb-3";
+            statusDiv.innerText = `Спремно за слање: ${imeFajla}`;
+            statusDiv.classList.remove('d-none');
         }
+
+        rfzoForm.addEventListener('submit', () => {
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Учитавање је у току... Сачекајте...`;
+        });
     </script>
 }
