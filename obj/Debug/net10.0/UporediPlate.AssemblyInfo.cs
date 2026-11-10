@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("UporediPlate")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+5a7a9a5dda1cdd5aa9264f329b4a8cda02b67af2")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+5c71c3abf56f5643ad2e6ca234da53fca72430a8")]
 [assembly: System.Reflection.AssemblyProductAttribute("UporediPlate")]
 [assembly: System.Reflection.AssemblyTitleAttribute("UporediPlate")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

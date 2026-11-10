@@ -2,7 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 using Microsoft.Extensions.Configuration;
 using System.IO;
-using UporediPlate.Models; // УКЉУЧЕНО: Омогућава приступ класи RfzoUvoz из фолдера Models
+using UporediPlate.Models; // УКЉУЧЕНО: Омогућава приступ моделима из фолдера Models
 
 namespace UporediPlate
 {
@@ -20,6 +20,9 @@ namespace UporediPlate
         
         // Ова линија говори EF Core-у да направи табелу 'RfzoUvozi' у MS SQL бази
         public DbSet<RfzoUvoz> RfzoUvozi { get; set; }
+
+        // ДОДАТО: Ова линија омогућава креирање табеле 'ZuUvozi' за Здравствене Установе
+        public DbSet<ZuUvoz> ZuUvozi { get; set; }
     }
 
     // 2. FABRIKA ZA KREIRANJE MIGRACIJA (Design-time)
