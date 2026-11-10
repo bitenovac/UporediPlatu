@@ -39,54 +39,55 @@
     </div>
 
     <!-- Ćirilično podnožje stranice -->
-  <!-- Фиксно доње заглавље у РФЗО стилу са навигацијом -->
-<!-- Фиксно доње заглавље у РФЗО стилу са навигацијом и иконама -->
-<footer class="border-top footer fixed-bottom bg-light py-2 shadow-lg" style="border-top: 3px solid var(--rfzo-accent) !important; z-index: 1030;">
-    <div class="container d-flex flex-column flex-sm-row justify-content-between align-items-center">
-        
-        <!-- Ауторска права са леве стране -->
-        <div class="text-muted small mb-2 mb-sm-0">
-            &copy; @DateTime.Now.Year - Упоређивање плата - Интерна апликација
+    <!-- Фиксно доње заглавље у РФЗО стилу са навигацијом и иконама -->
+    <footer class="border-top footer fixed-bottom bg-light py-2 shadow-lg" style="border-top: 3px solid var(--rfzo-accent) !important; z-index: 1030;">
+        <div class="container d-flex flex-column flex-sm-row justify-content-between align-items-center">
+            
+            <!-- Ауторска права са леве стране -->
+            <div class="text-muted small mb-2 mb-sm-0">
+                &copy; @DateTime.Now.Year - Упоређивање плата - Интерна апликација
+            </div>
+
+            <!-- Десна страна: Четири компактна дугмета са оригиналним сликама -->
+            <div class="d-flex gap-2 align-items-center">
+                @{
+                    // Преузимање имена тренутне акције ради бојења активног дугмета
+                    string trenutnaAkcija = ViewContext.RouteData.Values["action"]?.ToString() ?? "Index";
+
+                    // Помоћна функција за одређивање класе дугмета
+                    string VratiKlasuDugmeta(string akcija) => 
+                        trenutnaAkcija.Equals(akcija, StringComparison.OrdinalIgnoreCase) 
+                        ? "btn-dole-aktivno d-inline-flex align-items-center gap-1" 
+                        : "btn-dole-pasivno d-inline-flex align-items-center gap-1";
+                }
+
+                <!-- 1. Почетна -->
+                <a class="@VratiKlasuDugmeta("Index")" asp-controller="Home" asp-action="Index">
+                    <span>🏠</span> Почетна
+                </a>
+
+                <!-- 2. ЗУ (Са вашом сликом logoZU.jpg) -->
+                <a class="@VratiKlasuDugmeta("Zu")" asp-controller="Home" asp-action="Zu">
+                    <img src="~/images/logoZU.jpg" alt="ЗУ" style="height: 18px; width: auto; object-fit: contain; display: inline-block;" />
+                    <span>ЗУ</span>
+                </a>
+
+                <!-- 3. РФЗО (Са вашом новом сликом logoRFZO1.jpg) -->
+                <a class="@VratiKlasuDugmeta("Rfzo")" asp-controller="Home" asp-action="Rfzo">
+                    <img src="~/images/logoRFZO1.jpg" alt="РФЗО" style="height: 18px; width: auto; object-fit: contain; display: inline-block;" />
+                    <span>РФЗО</span>
+                </a>
+
+                <!-- 4. Извештај (Замењен емоџи са logoAnaliza.png) -->
+                <a class="@VratiKlasuDugmeta("KreirajIzvestaj")" asp-controller="Home" asp-action="KreirajIzvestaj">
+                    <img src="~/images/logoAnaliza.png" alt="Извештај" style="height: 18px; width: auto; object-fit: contain; display: inline-block;" />
+                    <span>Извештај</span>
+                </a>
+            </div>
+
         </div>
+    </footer>
 
-        <!-- Десна страна: Четири компактна дугмета са оригиналним сликама -->
-        <div class="d-flex gap-2 align-items-center">
-            @{
-                // Преузимање имена тренутне акције ради бојења активног дугмета
-                string trenutnaAkcija = ViewContext.RouteData.Values["action"]?.ToString() ?? "Index";
-
-                // Помоћна функција за одређивање класе дугмета
-                string VratiKlasuDugmeta(string akcija) => 
-                    trenutnaAkcija.Equals(akcija, StringComparison.OrdinalIgnoreCase) 
-                    ? "btn-dole-aktivno d-inline-flex align-items-center gap-1" 
-                    : "btn-dole-pasivno d-inline-flex align-items-center gap-1";
-            }
-
-            <!-- 1. Почетна -->
-            <a class="@VratiKlasuDugmeta("Index")" asp-controller="Home" asp-action="Index">
-                <span>🏠</span> Почетна
-            </a>
-
-            <!-- 2. ЗУ (Са вашом сликом logoZU.jpg) -->
-            <a class="@VratiKlasuDugmeta("Zu")" asp-controller="Home" asp-action="Zu">
-                <img src="~/images/logoZU.jpg" alt="ЗУ" style="height: 18px; width: auto; object-fit: contain; display: inline-block;" />
-                <span>ЗУ</span>
-            </a>
-
-            <!-- 3. РФЗО (Са вашом новом сликом logoRFZO1.jpg) -->
-            <a class="@VratiKlasuDugmeta("Rfzo")" asp-controller="Home" asp-action="Rfzo">
-                <img src="~/images/logoRFZO1.jpg" alt="РФЗО" style="height: 18px; width: auto; object-fit: contain; display: inline-block;" />
-                <span>РФЗО</span>
-            </a>
-
-            <!-- 4. Извештај -->
-            <a class="@VratiKlasuDugmeta("KreirajIzvestaj")" asp-controller="Home" asp-action="KreirajIzvestaj">
-                <span>📊</span> Извештај
-            </a>
-        </div>
-
-    </div>
-</footer>
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>

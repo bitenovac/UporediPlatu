@@ -1,64 +1,64 @@
 ﻿@{
-    ViewData["Title"] = "Почетна";
+    ViewData["Title"] = "Почетна страна - Упореди Плату";
 }
 
-<div class="text-center mt-5 mb-5">
-    <h1 class="fw-bold display-5 text-uppercase" style="color: var(--rfzo-primary);">
-        Интерни систем за контролу и упоређивање плата
-    </h1>
-    <p class="lead text-muted">Изаберите опцију испод како бисте започели рад са документима</p>
+<div class="text-center my-5">
+    <h1 class="display-4 fw-bold text-primary">Интерни Портал за Упоређивање Плата</h1>
+    <p class="lead text-muted">Добродошли у апликацију за анализу и увоз података. Изаберите једну од опција испод.</p>
 </div>
 
-<div class="container">
-    <div class="row g-4 justify-content-center">
-        
-        <!-- Прво велико dugme: ЗУ (Са новом сликом) -->
-        <div class="col-md-4">
-            <div class="rfzo-panel p-4 text-center h-100 d-flex flex-column justify-content-between">
-                <div>
-                    <!-- Директно учитавање ваше ЗУ слике из images фолдера -->
-                    <div class="mb-3 d-flex justify-content-center align-items-center" style="height: 70px;">
-                        <img src="~/images/logoZU.jpg" alt="ЗУ Лого" style="max-height: 100%; max-width: 100%; object-fit: contain;" />
+<div class="container my-5">
+    <div class="row justify-content-center g-4">
+        <!-- Прво дугме: Увоз података из ЗУ -->
+        <div class="col-md-4 col-sm-12 text-center">
+            <div class="card h-100 shadow-sm border-0 bg-light p-4">
+                <div class="card-body d-flex flex-column justify-content-between">
+                    <!-- Слика логоа на врху за ЗУ -->
+                    <div class="mb-4 d-flex justify-content-center align-items-center" style="height: 100px;">
+                        <img src="~/images/logoZU.jpg" alt="Лого ЗУ" class="img-fluid" style="max-height: 100px; object-fit: contain;" asp-append-version="true" />
                     </div>
-                    <h4 class="fw-bold mb-3" style="color: var(--rfzo-primary);">ЗДРАВСТВЕНЕ УСТАНОВЕ</h4>
-                    <p class="text-muted small">Учитавање ексел табела са подацима генерисаним од стране здравствених установа (ЗУ).</p>
-                </div>
-                <div class="mt-4">
-                    <a class="btn btn-rfzo-primary w-100 py-2 fs-5" asp-controller="Home" asp-action="Zu">Отвори ЗУ</a>
+                    <p class="card-text text-muted mb-4">Увезите податке добијене од стране здравствених установа у базу података.</p>
+                    <a asp-controller="Home" asp-action="Zu" class="btn btn-primary btn-lg w-100 py-3 fw-semibold">
+                        Увоз података из ЗУ
+                    </a>
                 </div>
             </div>
         </div>
 
-        <!-- Друго велико dugme: РФЗО (Са новом сликом) -->
-        <div class="col-md-4">
-            <div class="rfzo-panel p-4 text-center h-100 d-flex flex-column justify-content-between">
-                <div>
-                    <!-- Директно учитавање ваше нове РФЗО слике из images фолдера -->
-                    <div class="mb-3 d-flex justify-content-center align-items-center" style="height: 70px;">
-                        <img src="~/images/logoRFZO1.jpg" alt="РФЗО Лого Нови" style="max-height: 100%; max-width: 100%; object-fit: contain;" />
+        <!-- Друго дугме: Увоз података из РФЗО-а -->
+        <div class="col-md-4 col-sm-12 text-center">
+            <div class="card h-100 shadow-sm border-0 bg-light p-4">
+                <div class="card-body d-flex flex-column justify-content-between">
+                    <!-- Слика логоа на врху за РФЗО -->
+                    <div class="mb-4 d-flex justify-content-center align-items-center" style="height: 100px;">
+                        <img src="~/images/logoRFZO1.jpg" alt="Лого РФЗО" class="img-fluid" style="max-height: 100px; object-fit: contain;" asp-append-version="true" />
                     </div>
-                    <h4 class="fw-bold mb-3" style="color: var(--rfzo-primary);">РФЗО БАЗА</h4>
-                    <p class="text-muted small">Учитавање званичних и одобрених табела са подацима РФЗО-а за обрачунски период.</p>
-                </div>
-                <div class="mt-4">
-                    <a class="btn btn-rfzo-primary w-100 py-2 fs-5" asp-controller="Home" asp-action="Rfzo">Отвори РФЗО</a>
+                    <p class="card-text text-muted mb-4">Увезите податке Републичког фонда за здравствено осигурање.</p>
+                    <a asp-controller="Home" asp-action="Rfzo" class="btn btn-primary btn-lg w-100 py-3 fw-semibold">
+                        Увоз података из РФЗО-а
+                    </a>
                 </div>
             </div>
         </div>
 
-        <!-- Треће велико dugme: Креирај извештај -->
-                <!-- Треће велико dugme: Креирај извештај (Сада потпуно исто као прва два) -->
-        <div class="col-md-4">
-            <div class="rfzo-panel p-4 text-center h-100 d-flex flex-column justify-content-between">
-                <div>
-                    <div class="fs-1 mb-3 d-flex justify-content-center align-items-center" style="height: 70px;">📊</div>
-                    <h4 class="fw-bold mb-3" style="color: var(--rfzo-primary);">ИЗВЕШТАЈ И ПРОВЕРА</h4>
-                    <p class="text-muted small">Покретање унакрсног упоређивања података, детекција одступања и чишћење грешака.</p>
-                </div>
-                <div class="mt-4">
-                    <a class="btn btn-rfzo-primary w-100 py-2 fs-5" asp-controller="Home" asp-action="KreirajIzvestaj">Покрени проверу</a>
+        <!-- Треће дугме: Упоређивање података ЗУ и РФЗО -->
+        <div class="col-md-4 col-sm-12 text-center">
+            <div class="card h-100 shadow-sm border-0 bg-light p-4">
+                <div class="card-body d-flex flex-column justify-content-between">
+                    <!-- Нова слика на врху за Упоређивање/Анализу -->
+                    <div class="mb-4 d-flex justify-content-center align-items-center" style="height: 100px;">
+                        <img src="~/images/logoAnaliza.png" alt="Лого Анализа" class="img-fluid" style="max-height: 100px; object-fit: contain;" asp-append-version="true" />
+                    </div>
+                    <p class="card-text text-muted mb-4">Покрените процес анализе и упоређивања унетих података из Здравствених установа и РФЗО-а.</p>
+                    <a asp-controller="Home" asp-action="Kreirajizvestaj" class="btn btn-success btn-lg w-100 py-3 fw-semibold">
+                        Упореди податке ЗУ и РФЗО
+                    </a>
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+<footer class="text-center text-muted mt-5 pt-4 border-top small">
+    Интерна апликација &copy; @DateTime.Now.Year - UporediPlatu
+</footer>
