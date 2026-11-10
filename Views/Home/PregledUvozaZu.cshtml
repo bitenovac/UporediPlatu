@@ -1,0 +1,133 @@
+@model IEnumerable<UporediPlate.Models.ZuUvoz>
+@{
+    ViewData["Title"] = "Преглед увоза из ЗУ - Упореди Плату";
+}
+
+<div class="container-fluid mt-4 mb-5 px-4">
+    <!-- Горњи део са насловом, информацијама и дугмићима -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-3 gap-2">
+        <div>
+            <h2 class="text-success fw-bold h3 mb-1">Детаљан преглед ЗУ увоза</h2>
+            <p class="text-muted small mb-0">
+                Фајл: <strong class="text-dark">@ViewBag.NazivFajla</strong> | 
+                Обрачунски период: <strong class="text-dark">@ViewBag.Period</strong>
+            </p>
+        </div>
+        <div class="d-flex gap-2">
+            <!-- ПРВО ДУГМЕ: Повратак назад (са леве стране) -->
+            <a asp-controller="Home" asp-action="Zu" class="btn btn-outline-secondary d-flex align-items-center gap-2 fw-semibold">
+                <span>⬅️</span> Назад на ЗУ страницу
+            </a>
+            <!-- ДРУГО ДУГМЕ: Извоз у Excel (са десне стране) -->
+            <button onclick="izveziUTabeluExcel('zuTabelaRadnika', '@ViewBag.NazivFajla')" class="btn btn-success d-flex align-items-center gap-2 fw-semibold shadow-sm">
+                <span>📥</span> Извези у Excel
+            </button>
+        </div>
+    </div>
+
+    <!-- Табела са свим радницима, допуњена са 3 колоне на крају табеле -->
+    <div class="card shadow-sm border-0 rounded-3 overflow-hidden">
+        <div class="table-responsive" style="max-height: 70vh;">
+            <table class="table table-sm table-striped table-hover align-middle mb-0 small" id="zuTabelaRadnika" style="font-size: 0.8rem;">
+                <thead class="table-dark sticky-top" style="background-color: #263238; z-index: 1;">
+                    <tr>
+                        <th class="ps-2">Филијала</th>
+                        <th>Шифра ЗУ</th>
+                        <th>Назив ЗУ</th>
+                        <th>Ниво</th>
+                        <th>Месец</th>
+                        <th>ЈМБГ</th>
+                        <th>Име</th>
+                        <th>Презиме</th>
+                        <th>Радно место</th>
+                        <th>Осн. коеф</th>
+                        <th>Ук. коеф</th>
+                        <th>Сати ук.</th>
+                        <th>Прековр. сати</th>
+                        <th>Дежурство сати</th>
+                        <th>По позиву сати</th>
+                        <th>Прековр. нето</th>
+                        <th>Дежурство нето</th>
+                        <th>По позиву нето</th>
+                        <th>Приправ. сати</th>
+                        <th>Приправ. нето</th>
+                        <th class="table-success text-dark">Укупан нето</th>
+                        <th>Бруто 1</th>
+                        <th>Бруто 2</th>
+
+                        <!-- Премештено на крај: 3 колоне метаподатака по угледу на РФЗО -->
+                        <th class="bg-secondary text-white">PeriodNaKojiSeSpisakOdnosi</th>
+                        <th class="bg-secondary text-white">DatumUvozaPodataka</th>
+                        <th class="bg-secondary text-white pe-2">NazivFajla</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model != null && Model.Any())
+                    {
+                        foreach (var radnik in Model)
+                        {
+                            <tr>
+                                <td class="ps-2">@radnik.Filijala</td>
+                                <td>@radnik.SifraZu</td>
+                                <td class="text-truncate" style="max-width: 150px;" title="@radnik.NazivZu">@radnik.NazivZu</td>
+                                <td>@radnik.Nivo</td>
+                                <td class="text-center">@radnik.Mesec</td>
+                                <td class="fw-bold text-secondary">@radnik.Jmbg</td>
+                                <td>@radnik.Ime</td>
+                                <td>@radnik.Prezime</td>
+                                <td class="text-truncate" style="max-width: 150px;" title="@radnik.RadnoMesto">@radnik.RadnoMesto</td>
+                                <td class="text-end">@radnik.OsnovniKoef.ToString("N2")</td>
+                                <td class="text-end">@radnik.UkupniKoef.ToString("N2")</td>
+                                <td class="text-end">@radnik.SatiUkupno.ToString("N1")</td>
+                                <td class="text-end">@radnik.PrekovremeniSati.ToString("N1")</td>
+                                <td class="text-end">@radnik.DezurstvoSati.ToString("N1")</td>
+                                <td class="text-end">@radnik.PoPozivuSati.ToString("N1")</td>
+                                <td class="text-end">@radnik.PrekovremeniNeto.ToString("N2")</td>
+                                <td class="text-end">@radnik.DezurstvoNeto.ToString("N2")</td>
+                                <td class="text-end">@radnik.PoPozivuNeto.ToString("N2")</td>
+                                <td class="text-end">@radnik.PripravnostSati.ToString("N1")</td>
+                                <td class="text-end">@radnik.PripravnostNeto.ToString("N2")</td>
+                                <td class="text-end table-success fw-bold text-dark">@radnik.UkupanNeto.ToString("N2")</td>
+                                <td class="text-end">@radnik.Bruto1.ToString("N2")</td>
+                                <td class="text-end">@radnik.Bruto2.ToString("N2")</td>
+
+                                <!-- Вредности за 3 колоне на самом крају реда -->
+                                <td class="fw-semibold text-muted">@radnik.PeriodUvoza.ToString("MM/yyyy")</td>
+                                <td class="text-muted">@radnik.DatumUvozaPodataka.ToString("dd.MM.yyyy HH:mm:ss")</td>
+                                <td class="text-muted pe-2">@radnik.NazivFajla</td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+        <div class="card-footer bg-light py-2 text-muted small px-3">
+            Укупно приказано радника: <strong class="text-dark">@Model.Count()</strong>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function izveziUTabeluExcel(idTabele, nazivFajla) {
+            var tabela = document.getElementById(idTabele);
+            var html = tabela.outerHTML;
+
+            var url = 'data:application/vnd.ms-excel;charset=utf-8,' + encodeURIComponent(
+                '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://w3.org">' +
+                '<head><meta charset="UTF-8"><!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet>' +
+                '<x:Name>Лист1</x:Name><x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions></x:Worksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]--></head>' +
+                '<body>' + html + '</body></html>'
+            );
+
+            var linkЗаПреузимање = document.createElement("a");
+            document.body.appendChild(linkЗаПреузимање);
+            
+            linkЗаПреузимање.href = url;
+            linkЗаПреузимање.download = (nazivFajla || 'Izvoz_ZU') + '.xls';
+            linkЗаПреузимање.click();
+            
+            document.body.removeChild(linkЗаПреузимање);
+        }
+    </script>
+}

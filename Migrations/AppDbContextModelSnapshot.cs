@@ -135,6 +135,106 @@ namespace UporediPlate.Migrations
 
                     b.ToTable("RfzoUvozi");
                 });
+
+            modelBuilder.Entity("UporediPlate.Models.ZuUvoz", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<decimal>("Bruto1")
+                        .HasColumnType("decimal(18, 4)");
+
+                    b.Property<decimal>("Bruto2")
+                        .HasColumnType("decimal(18, 4)");
+
+                    b.Property<DateTime>("DatumUvozaPodataka")
+                        .HasColumnType("datetime2");
+
+                    b.Property<decimal>("DezurstvoNeto")
+                        .HasColumnType("decimal(18, 4)");
+
+                    b.Property<decimal>("DezurstvoSati")
+                        .HasColumnType("decimal(18, 4)");
+
+                    b.Property<string>("Filijala")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Ime")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Jmbg")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("Mesec")
+                        .HasColumnType("int");
+
+                    b.Property<string>("NazivFajla")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("NazivZu")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Nivo")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal>("OsnovniKoef")
+                        .HasColumnType("decimal(18, 4)");
+
+                    b.Property<DateTime>("PeriodUvoza")
+                        .HasColumnType("datetime2");
+
+                    b.Property<decimal>("PoPozivuNeto")
+                        .HasColumnType("decimal(18, 4)");
+
+                    b.Property<decimal>("PoPozivuSati")
+                        .HasColumnType("decimal(18, 4)");
+
+                    b.Property<decimal>("PrekovremeniNeto")
+                        .HasColumnType("decimal(18, 4)");
+
+                    b.Property<decimal>("PrekovremeniSati")
+                        .HasColumnType("decimal(18, 4)");
+
+                    b.Property<string>("Prezime")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal>("PripravnostNeto")
+                        .HasColumnType("decimal(18, 4)");
+
+                    b.Property<decimal>("PripravnostSati")
+                        .HasColumnType("decimal(18, 4)");
+
+                    b.Property<string>("RadnoMesto")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal>("SatiUkupno")
+                        .HasColumnType("decimal(18, 4)");
+
+                    b.Property<string>("SifraZu")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal>("UkupanNeto")
+                        .HasColumnType("decimal(18, 4)");
+
+                    b.Property<decimal>("UkupniKoef")
+                        .HasColumnType("decimal(18, 4)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("ZuUvozi");
+                });
 #pragma warning restore 612, 618
         }
     }

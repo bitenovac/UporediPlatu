@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using UporediPlate;
+using UporediPlate.Services; // Исправљено "Platu" у "Plate" да се поклопи са вашим пројектом
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -10,20 +11,26 @@ var connectionString = builder.Configuration.GetConnectionString("DefaultConnect
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(connectionString));
 
-// Add services to the container.
+// 3. Регистрација сервиса за брзи увоз РФЗО података
+builder.Services.AddScoped<UvozRfzoServis>();
+
+
+// 4. Регистрација сервиса за брзи увоз података из Здравствених Установа
+builder.Services.AddScoped<UvozZuServis>();
+
+
+// Додавање подршке за MVC контролере и погледе
 builder.Services.AddControllersWithViews();
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+// Конфигурација протока извршавања HTTP захтева (Pipeline)
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
 
-//app.UseHttpsRedirection();
 app.UseRouting();
 
 app.UseAuthorization();

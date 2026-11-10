@@ -1,2 +1,164 @@
-<h2 class="rfzo-page-title">Здравствене установе (ЗУ) - Увоз података</h2>
-<p class="mt-3">Овде ће се налазити форма за учитавање ексел табела генерисаних од стране здравствених установа.</p>
+@using System.Data
+@model DataTable
+@{
+    ViewData["Title"] = "Увоз података из ЗУ - Упореди Плату";
+}
+
+<!-- Главни наслов и поднаслов странице -->
+<div class="container mt-4">
+    <h1 class="text-success fw-bold h2 mb-1">Страница ЗУ</h1>
+    <p class="text-muted small">Изаберите обрачунски период, а затим превуците или учитајте званичну Excel табелу.</p>
+</div>
+
+<div class="container my-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-7">
+            
+            <!-- Главна картица у зеленом стилу за учитавање -->
+            <div class="card shadow-sm border-0 rounded-3 overflow-hidden">
+                <div class="card-header text-white px-4 py-3" style="background-color: #2e7d32;">
+                    <h5 class="m-0 d-flex align-items-center small fw-bold">
+                        <img src="~/images/logoZU.jpg" alt="ЗУ"
+                             style="height: 20px; width: auto; margin-right: 10px; filter: brightness(0) invert(1);" />
+                        Учитавање ЗУ Excel табеле
+                    </h5>
+                </div>
+                
+                <div class="card-body bg-white p-4">
+                    <form asp-controller="Home" asp-action="UveziZuPodatke" method="post" enctype="multipart/form-data"
+                          id="uvozFormaZU">
+                        
+                        <!-- 1. Обрачунски период (Аутоматски постављен текући месец кроз вредност) -->
+                        <div class="mb-4">
+                            <label class="form-label text-secondary small fw-bold mb-1">Обрачунски период за који се
+                                уноси плата:</label>
+                                <div class="input-group">
+                                    <input type="month" class="form-control text-muted" id="obracunskiPeriod" name="period"
+                                           value="@DateTime.Now.ToString("yyyy-MM")" required />
+                                </div>
+                                <div class="form-text text-muted" style="font-size: 0.75rem;">
+                                    Текући месец је већ изабран, по потреби га можете променити пре увоза
+                                </div>
+                            </div>
+
+                            <!-- 2. Зона за превлачење фајла (Drag & Drop) -->
+                            <div class="border border-2 border-dashed rounded-3 p-4 text-center bg-light position-relative"
+                                 style="border-style: dashed !important; border-color: #a5d6a7 !important; cursor: pointer;"
+                                 id="dropZonaZU">
+                            
+                                <input type="file" id="zuFajl" name="excelFajl"
+                                       class="position-absolute top-0 start-0 w-100 h-100 opacity-0" style="cursor: pointer;"
+                                       required />
+                            
+                                <div class="mb-2">
+                                    <span style="font-size: 3rem; color: #ffca28;">📁</span>
+                                </div>
+                            
+                                <h6 class="fw-bold mb-1 text-dark" id="tekstFajla">Превуците Excel фајл овде</h6>
+                                <p class="text-muted small mb-3" style="font-size: 0.8rem;">Подржани формати: .xlsx, .xls
+                                </p>
+                            
+                                <button type="button" class="btn btn-success btn-sm px-3"
+                                        style="background-color: #2e7d32; border: none;">
+                                    Изаберите са рачунара
+                                </button>
+                            </div>
+
+                            <!-- 3. Зелено дугме за увоз -->
+                            <div class="mt-4">
+                                <button type="submit"
+                                        class="btn btn-success w-100 py-2 d-flex align-items-center justify-content-center gap-2 fw-semibold"
+                                        style="background-color: #2e7d32; border: none;" id="btnUveziZU">
+                                    <span>🚀</span> Покрени увоз података
+                                </button>
+                            </div>
+
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Системска обавештења -->
+                @if (TempData["UspehPoruka"] != null)
+                {
+                    <div class="alert alert-success alert-dismissible fade show mt-3 small" role="alert">
+                        @TempData["UspehPoruka"]
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                }
+                @if (TempData["GreskaPoruka"] != null)
+                {
+                    <div class="alert alert-danger alert-dismissible fade show mt-3 small" role="alert">
+                        @TempData["GreskaPoruka"]
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                }
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Секција на дну: Историја учитаних ЗУ фајлова (Динамички приказ из прослеђеног модела) -->
+    <!-- Секција на дну: Историја учитаних ЗУ фајлова (Динамички приказ из прослеђеног модела) -->
+    <div class="container mt-5 mb-5">
+        <div class="card shadow-sm border-0 rounded-3 overflow-hidden">
+            <div class="card-header text-white py-2 px-3 d-flex align-items-center"
+                 style="background-color: #455a64; font-size: 0.9rem;">
+                <span class="me-2">📊</span> Историја учитаних ЗУ фајлова
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0" style="font-size: 0.85rem;">
+                    <thead class="table-dark" style="background-color: #263238;">
+                        <tr>
+                            <th class="ps-3">Назив увезеног фајла</th>
+                            <th>Обрачунски период</th>
+                            <th>Датум и време увоза</th>
+                            <th>Број записа</th>
+                            <th class="text-center pe-3">Акције</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Model != null && Model.Rows.Count > 0)
+                        {
+                            foreach (DataRow red in Model.Rows)
+                            {
+                                DateTime dtPeriod = Convert.ToDateTime(red["PeriodUvoza"]);
+                                DateTime dtUvoza = Convert.ToDateTime(red["DatumUvozaPodataka"]);
+                                string kljucVreme = dtUvoza.ToString("yyyyMMddHHmmss");
+
+                                <tr>
+                                    <!-- 1. Колона: Назив фајла -->
+                                    <td class="ps-3 text-secondary">
+                                        <span class="text-success me-1">●</span> @red["NazivFajla"]
+                                    </td>
+                                    <!-- 2. Колона: Обрачунски период -->
+                                    <td>@dtPeriod.ToString("MM.yyyy")</td>
+                                    <!-- 3. Колона: Датум и време увоза -->
+                                    <td>@dtUvoza.ToString("dd.MM.yyyy HH:mm")</td>
+                                    <!-- 4. Колона: Број записа -->
+                                    <td><span class="badge bg-primary px-2 py-1">@red["BrojRedova"]</span></td>
+                                    <!-- 5. Колона: Акције (Уоквирена дугмад на тачном месту) -->
+                                    <td class="text-center pe-3">
+                                        <div class="d-flex justify-content-center gap-2">
+                                            <a asp-controller="Home" asp-action="PregledUvozaZu" asp-route-vremeKljuc="@kljucVreme"
+                                               class="btn btn-sm btn-outline-primary px-2" title="Преглед">👁️</a>
+                                            <a asp-controller="Home" asp-action="ObrisiUvozZu" asp-route-vremeKljuc="@kljucVreme"
+                                               class="btn btn-sm btn-outline-danger px-2" title="Обриши"
+                                               onclick="return confirm('Да ли сте сигурни да желите да обришете овај увоз из ЗУ?');">🗑️</a>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="5" class="text-center text-muted py-3">Нема евидентираних увоза за Здравствене
+                                    Установе.</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+

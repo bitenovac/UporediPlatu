@@ -1,17 +1,13 @@
 using System;
 using System.Diagnostics;
-using System.IO;
-using System.Data;
 using System.Linq;
 using System.Threading.Tasks;
-using System.Collections.Generic;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
-using ExcelDataReader;
 using UporediPlate.Models;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Data.SqlClient;
+using UporediPlate; // Усклађено са Вашим AppDbContext простором
+using UporediPlate.Services;
 
 namespace UporediPlate.Controllers
 {
@@ -19,242 +15,54 @@ namespace UporediPlate.Controllers
     {
         private readonly AppDbContext _context;
         private readonly ILogger<HomeController> _logger;
+        private readonly UvozRfzoServis _uvozRfzoServis;
+        private readonly UvozZuServis _uvozZuServis; // ДОДАТО
 
-        public HomeController(AppDbContext context, ILogger<HomeController> logger)
+        // Конструктор сада убризгава оба сервиса (и за РФЗО и за ЗУ)
+        public HomeController(AppDbContext context, ILogger<HomeController> logger, UvozRfzoServis uvozRfzoServis, UvozZuServis uvozZuServis)
         {
             _context = context;
             _logger = logger;
+            _uvozRfzoServis = uvozRfzoServis;
+            _uvozZuServis = uvozZuServis; // ДОДАТО
         }
 
         public IActionResult Index() => View();
-        public IActionResult Zu() => View();
+        public IActionResult Kreirajizvestaj() => View();
 
+        // РФЗО Страница - учитава историју преко свог сервиса
         public IActionResult Rfzo()
         {
-            DataTable dtIstorija = new DataTable();
-            dtIstorija.Columns.Add("NazivFajla", typeof(string));
-            dtIstorija.Columns.Add("PeriodUvoza", typeof(DateTime));
-            dtIstorija.Columns.Add("DatumUvozaPodataka", typeof(DateTime));
-            dtIstorija.Columns.Add("BrojRedova", typeof(int));
-
-            try
-            {
-                var grupe = _context.RfzoUvozi
-                    .GroupBy(x => new { x.NazivFajla, x.PeriodUvoza, x.DatumUvozaPodataka })
-                    .Select(g => new
-                    {
-                        NazivFajla = g.Key.NazivFajla ?? "Непознат назив",
-                        PeriodUvoza = g.Key.PeriodUvoza,
-                        DatumUvozaPodataka = g.Key.DatumUvozaPodataka,
-                        BrojRedova = g.Count()
-                    })
-                    .OrderByDescending(x => x.DatumUvozaPodataka)
-                    .ToList();
-
-                foreach (var g in grupe)
-                {
-                    dtIstorija.Rows.Add(g.NazivFajla, g.PeriodUvoza, g.DatumUvozaPodataka, g.BrojRedova);
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Грешка приликом читања историје.");
-            }
-
+            var dtIstorija = _uvozRfzoServis.DobijIstorijuUvoza();
             return View(dtIstorija);
         }
 
-        public IActionResult KreirajIzvestaj() => View();
-
-        [HttpPost]
-        public IActionResult ObradiUvozZu(int ustanovaId, DateTime period, IFormFile excelFajl)
-        {
-            return RedirectToAction("Zu");
-        }
-
+        // Покретање РФЗО увоза
         [HttpPost]
         [DisableRequestSizeLimit]
-        public async Task<IActionResult> ObradiUvozRfzo(DateTime period, IFormFile excelFajl)
+        public async Task<IActionResult> UveziRfzoPodatke(DateTime period, IFormFile excelFajl)
         {
-            if (excelFajl == null || excelFajl.Length == 0) return RedirectToAction("Rfzo");
+            var (uspeh, poruka) = await _uvozRfzoServis.ObradiRfzoExcel(excelFajl, period);
 
-            var ekstenzija = Path.GetExtension(excelFajl.FileName).ToLowerInvariant();
-            if (ekstenzija != ".xlsx" && ekstenzija != ".xls") return RedirectToAction("Rfzo");
+            if (uspeh) TempData["UspehPoruka"] = poruka;
+            else TempData["GreskaPoruka"] = poruka;
 
-            System.Text.Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
-            DateTime trenutnoVremeUvoza = DateTime.Now;
-
-            try
-            {
-                using (var stream = new MemoryStream())
-                {
-                    await excelFajl.CopyToAsync(stream);
-                    stream.Position = 0;
-
-                    using (var reader = ExcelReaderFactory.CreateReader(stream))
-                    {
-                        var result = reader.AsDataSet(new ExcelDataSetConfiguration()
-                        {
-                            ConfigureDataTable = (_) => new ExcelDataTableConfiguration() { UseHeaderRow = true }
-                        });
-
-                        if (result.Tables.Count == 0) return RedirectToAction("Rfzo");
-
-                        DataTable izvornaTabela = result.Tables[0];
-
-                        DataTable dtZaBazu = new DataTable();
-                        dtZaBazu.Columns.Add("Jmbg", typeof(string));
-                        dtZaBazu.Columns.Add("Lbo", typeof(string));
-                        dtZaBazu.Columns.Add("Prezime", typeof(string));
-                        dtZaBazu.Columns.Add("Ime", typeof(string));
-                        dtZaBazu.Columns.Add("NazivSpreme", typeof(string));
-                        dtZaBazu.Columns.Add("NazivSpecijalnosti", typeof(string));
-                        dtZaBazu.Columns.Add("NazivSubSpecijalnosti", typeof(string));
-                        dtZaBazu.Columns.Add("NazivZvanja", typeof(string));
-                        dtZaBazu.Columns.Add("DatumZaposlenja", typeof(DateTime)).AllowDBNull = true;
-                        dtZaBazu.Columns.Add("NazivZanimanja", typeof(string));
-                        dtZaBazu.Columns.Add("NazivRV", typeof(string));
-                        dtZaBazu.Columns.Add("NazivRukovodioc", typeof(string));
-                        dtZaBazu.Columns.Add("NazivZZ", typeof(string));
-                        dtZaBazu.Columns.Add("NazivRM", typeof(string));
-                        dtZaBazu.Columns.Add("Koef1", typeof(decimal)).AllowDBNull = true;
-                        dtZaBazu.Columns.Add("DodKzaRuk", typeof(decimal)).AllowDBNull = true;
-                        dtZaBazu.Columns.Add("DodKzaSiNzv", typeof(decimal)).AllowDBNull = true;
-                        dtZaBazu.Columns.Add("Dodatni036", typeof(decimal)).AllowDBNull = true;
-                        dtZaBazu.Columns.Add("UkrsG", typeof(decimal)).AllowDBNull = true;
-                        dtZaBazu.Columns.Add("UkrsM", typeof(decimal)).AllowDBNull = true;
-                        dtZaBazu.Columns.Add("NapRadnik", typeof(string));
-                        dtZaBazu.Columns.Add("NapRz", typeof(string));
-                        dtZaBazu.Columns.Add("ProcRVr", typeof(int)).AllowDBNull = true;
-                        dtZaBazu.Columns.Add("NazivOJ", typeof(string));
-                        dtZaBazu.Columns.Add("SifraZu", typeof(string));
-                        dtZaBazu.Columns.Add("NazivZU", typeof(string));
-                        dtZaBazu.Columns.Add("PovecanjeId", typeof(int)).AllowDBNull = true;
-                        dtZaBazu.Columns.Add("DatumKapitacija", typeof(DateTime)).AllowDBNull = true;
-                        dtZaBazu.Columns.Add("DatumPrestankaRO", typeof(DateTime)).AllowDBNull = true;
-                        dtZaBazu.Columns.Add("NaSpecijalizaciji", typeof(int)).AllowDBNull = true;
-                        dtZaBazu.Columns.Add("PeriodUvoza", typeof(DateTime));
-                        dtZaBazu.Columns.Add("DatumUvozaPodataka", typeof(DateTime));
-                        dtZaBazu.Columns.Add("NazivFajla", typeof(string));
-
-                        foreach (DataRow red in izvornaTabela.Rows)
-                        {
-                            if (izvornaTabela.Columns.Count < 4) continue;
-
-                            string siroviJmbg = "";
-                            var jmbgObj = red[0];
-                            if (jmbgObj != null && jmbgObj != DBNull.Value)
-                            {
-                                if (decimal.TryParse(jmbgObj.ToString(), System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out decimal jmbgDec))
-                                    siroviJmbg = Math.Truncate(jmbgDec).ToString(System.Globalization.CultureInfo.InvariantCulture);
-                                else
-                                    siroviJmbg = jmbgObj.ToString()?.Trim() ?? "";
-                            }
-
-                            if (siroviJmbg.Length == 12) siroviJmbg = "0" + siroviJmbg;
-                            if (string.IsNullOrEmpty(siroviJmbg) || siroviJmbg.ToLower().Contains("jmbg") || siroviJmbg.Length < 13) continue;
-
-                            string siroviLbo = "";
-                            var lboObj = red[1];
-                            if (lboObj != null && lboObj != DBNull.Value)
-                            {
-                                if (decimal.TryParse(lboObj.ToString(), System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out decimal lboDec))
-                                    siroviLbo = Math.Truncate(lboDec).ToString(System.Globalization.CultureInfo.InvariantCulture);
-                                else
-                                    siroviLbo = lboObj.ToString()?.Trim() ?? "";
-                            }
-
-                            object ProcitajKolonu(int indeks, string tip)
-                            {
-                                if (izvornaTabela.Columns.Count <= indeks) return DBNull.Value;
-                                var val = red[indeks];
-                                if (val == null || val == DBNull.Value || string.IsNullOrWhiteSpace(val.ToString())) return DBNull.Value;
-
-                                if (tip == "decimal")
-                                {
-                                    if (decimal.TryParse(val.ToString(), System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out decimal decRez))
-                                        return decRez;
-                                    return DBNull.Value;
-                                }
-                                if (tip == "int")
-                                {
-                                    if (decimal.TryParse(val.ToString(), System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out decimal decVal))
-                                        return Convert.ToInt32(Math.Truncate(decVal));
-                                    return 0;
-                                }
-                                if (tip == "datum")
-                                {
-                                    var datRez = KonvertujExcelDatum(val);
-                                    return datRez.HasValue ? (object)datRez.Value : DBNull.Value;
-                                }
-
-                                return val.ToString()?.Trim() ?? "";
-                            }
-
-                            dtZaBazu.Rows.Add(
-siroviJmbg,
-siroviLbo,
-ProcitajKolonu(2, "string"),
-ProcitajKolonu(3, "string"),
-ProcitajKolonu(4, "string"),
-ProcitajKolonu(5, "string"),
-ProcitajKolonu(6, "string"),
-ProcitajKolonu(7, "string"),
-ProcitajKolonu(8, "datum"),
-ProcitajKolonu(9, "string"),
-ProcitajKolonu(10, "string"),
-ProcitajKolonu(11, "string"),
-ProcitajKolonu(12, "string"),
-ProcitajKolonu(13, "string"),
-ProcitajKolonu(14, "decimal"),
-ProcitajKolonu(15, "decimal"),
-ProcitajKolonu(16, "decimal"),
-ProcitajKolonu(17, "decimal"),
-ProcitajKolonu(18, "decimal"),
-ProcitajKolonu(19, "decimal"),
-ProcitajKolonu(20, "string"),
-ProcitajKolonu(21, "string"),
-ProcitajKolonu(22, "int"),
-ProcitajKolonu(23, "string"),
-ProcitajKolonu(24, "string"),
-ProcitajKolonu(25, "string"),
-ProcitajKolonu(26, "int"),
-ProcitajKolonu(27, "datum"),
-ProcitajKolonu(28, "datum"),
-ProcitajKolonu(29, "int"),
-period,
-trenutnoVremeUvoza,
-excelFajl.FileName
-);
-                        }
-                        if (dtZaBazu.Rows.Count > 0)
-                        {
-                            string stringKonekcije = _context.Database.GetDbConnection().ConnectionString;
-                            using (SqlConnection konekcija = new SqlConnection(stringKonekcije))
-                            {
-                                await konekcija.OpenAsync();
-                                using (SqlBulkCopy bulkCopy = new SqlBulkCopy(konekcija))
-                                {
-                                    bulkCopy.DestinationTableName = "RfzoUvozi";
-                                    foreach (DataColumn col in dtZaBazu.Columns)
-                                    {
-                                        bulkCopy.ColumnMappings.Add(col.ColumnName, col.ColumnName);
-                                    }
-                                    await bulkCopy.WriteToServerAsync(dtZaBazu);
-                                }
-                            }
-                        }
-                    }
-                }
-                return RedirectToAction("Rfzo");
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Грешка приликом увоза.");
-                return RedirectToAction("Rfzo");
-            }
+            return RedirectToAction("Rfzo");
         }
-                    public IActionResult PregledUvozaRfzo(string vremeKljuc)
+
+        // Брисање РФЗО увоза преко сервиса
+        public async Task<IActionResult> ObrisiUvozRfzo(string vremeKljuc)
+        {
+            var (uspeh, poruka) = await _uvozRfzoServis.ObrisiUvoz(vremeKljuc);
+
+            if (uspeh) TempData["UspehPoruka"] = poruka;
+            else TempData["GreskaPoruka"] = poruka;
+
+            return RedirectToAction("Rfzo");
+        }
+
+        // Преглед конкретног РФЗО увоза
+        public IActionResult PregledUvozaRfzo(string vremeKljuc)
         {
             try
             {
@@ -290,13 +98,54 @@ excelFajl.FileName
             return RedirectToAction("Rfzo");
         }
 
-                public async Task<IActionResult> ObrisiUvozRfzo(string vremeKljuc)
+
+        // ====================================================================
+        // ЗУ СЕКЦИЈА (ДОДАТЕ ФУНКЦИОНАЛНОСТИ)
+        // ====================================================================
+
+        // ГЕТ: Приказ ЗУ странице са историјом преко ЗУ сервиса
+        public IActionResult Zu()
+        {
+            var dtIstorija = _uvozZuServis.DobijIstorijuUvoza();
+            return View(dtIstorija);
+        }
+
+        // ПОСТ: Покретање увоза ЗУ Excel табеле преко сервиса
+        [HttpPost]
+        [DisableRequestSizeLimit]
+        public async Task<IActionResult> UveziZuPodatke(DateTime period, IFormFile excelFajl)
+        {
+            var (uspeh, poruka) = await _uvozZuServis.ObradiZuExcel(excelFajl, period);
+
+            if (uspeh) TempData["UspehPoruka"] = poruka;
+            else TempData["GreskaPoruka"] = poruka;
+
+            return RedirectToAction("Zu");
+        }
+
+        [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
+        public IActionResult Error()
+        {
+            return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
+        }
+        // ПОСТАВЉЕНО: Брисање конкретног ЗУ увоза преко сервиса
+        public async Task<IActionResult> ObrisiUvozZu(string vremeKljuc)
+        {
+            var (uspeh, poruka) = await _uvozZuServis.ObrisiUvoz(vremeKljuc);
+
+            if (uspeh) TempData["UspehPoruka"] = poruka;
+            else TempData["GreskaPoruka"] = poruka;
+
+            return RedirectToAction("Zu");
+        }
+
+        // ПОСТАВЉЕНО: Преглед радника учитаних у оквиру селектованог ЗУ фајла
+        public IActionResult PregledUvozaZu(string vremeKljuc)
         {
             try
             {
-                if (string.IsNullOrEmpty(vremeKljuc) || vremeKljuc.Length < 14) return RedirectToAction("Rfzo");
+                if (string.IsNullOrEmpty(vremeKljuc) || vremeKljuc.Length < 14) return RedirectToAction("Zu");
 
-                // Izvlačimo vreme do nivoa sekunde, ignorišemo milisekunde radi sigurnosti
                 int godina = int.Parse(vremeKljuc.Substring(0, 4));
                 int mesec = int.Parse(vremeKljuc.Substring(4, 2));
                 int dan = int.Parse(vremeKljuc.Substring(6, 2));
@@ -307,69 +156,30 @@ excelFajl.FileName
                 DateTime pocetakSekunde = new DateTime(godina, mesec, dan, sat, minut, sekund);
                 DateTime krajSekunde = pocetakSekunde.AddSeconds(1);
 
-                // Brisanje u opsegu te jedne sekunde (rešava problem sa zaokruživanjem milisekundi u bazi)
-                var zaBrisanje = _context.RfzoUvozi
+                var radnici = _context.ZuUvozi
                     .Where(x => x.DatumUvozaPodataka >= pocetakSekunde && x.DatumUvozaPodataka < krajSekunde)
+                    .OrderBy(x => x.Prezime)
+                    .ThenBy(x => x.Ime)
                     .ToList();
 
-                if (zaBrisanje.Any())
+                if (radnici.Any())
                 {
-                    _context.RfzoUvozi.RemoveRange(zaBrisanje);
-                    await _context.SaveChangesAsync();
+                    // Извлачимо првог радника да бисмо узели његову шифру ЗУ и ниво
+                    var prvi = radnici.First();
+
+                    // Формирамо исти приказ и за страницу детаљног прегледа радника
+                    ViewBag.NazivFajla = $"{prvi.SifraZu}_{prvi.Nivo}.xlsx";
+                    ViewBag.Period = prvi.PeriodUvoza.ToString("MM/yyyy");
+                    return View(radnici);
                 }
+
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Грешка приликом брисања.");
+                _logger.LogError(ex, "Грешка приликом отварања прегледа ЗУ.");
             }
-            return RedirectToAction("Rfzo");
-        }
-        private DateTime? KonvertujExcelDatum(object obj)
-        {
-            if (obj == null || string.IsNullOrWhiteSpace(obj.ToString())) return null;
-
-            string strVal = obj.ToString().Trim();
-
-            if (strVal.Contains(".") || strVal.Contains("-"))
-            {
-                if (DateTime.TryParse(strVal, out DateTime regularanDatum)) return regularanDatum;
-
-                if (DateTime.TryParseExact(strVal, new[] { "dd.MM.yyyy", "d.M.yyyy", "dd.MM.yyyy.", "yyyy-MM-dd" },
-                    System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out DateTime specDatum))
-                {
-                    return specDatum;
-                }
-            }
-
-            if (double.TryParse(strVal, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out double brojDana))
-            {
-                try
-                {
-                    if (brojDana > 1 && brojDana < 2958465)
-                    {
-                        return DateTime.FromOADate(brojDana);
-                    }
-                }
-                catch
-                {
-                    return null;
-                }
-            }
-
-            return null;
+            return RedirectToAction("Zu");
         }
 
-        private decimal? KonvertujUDecimal(object obj)
-        {
-            if (obj == null || string.IsNullOrWhiteSpace(obj.ToString())) return null;
-            if (decimal.TryParse(obj.ToString(), out decimal rezultat)) return rezultat;
-            return null;
-        }
-
-        [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
-        public IActionResult Error()
-        {
-            return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
-        }
     }
 }
