@@ -51,35 +51,35 @@
             <!-- Десна страна: Четири компактна дугмета са оригиналним сликама -->
             <div class="d-flex gap-2 align-items-center">
                 @{
-                    // Преузимање имена тренутне акције ради бојења активног дугмета
-                    string trenutnaAkcija = ViewContext.RouteData.Values["action"]?.ToString() ?? "Index";
+                    // Преузимање имена тренутног контролера ради бојења активног дугмета
+                    string trenutniKontroler = ViewContext.RouteData.Values["controller"]?.ToString() ?? "Home";
 
-                    // Помоћна функција за одређивање класе дугмета
-                    string VratiKlasuDugmeta(string akcija) => 
-                        trenutnaAkcija.Equals(akcija, StringComparison.OrdinalIgnoreCase) 
+                    // Помоћна функција за одређивање класе дугмета на основу активног контролера
+                    string VratiKlasuDugmeta(string kontroler) => 
+                        trenutniKontroler.Equals(kontroler, StringComparison.OrdinalIgnoreCase) 
                         ? "btn-dole-aktivno d-inline-flex align-items-center gap-1" 
                         : "btn-dole-pasivno d-inline-flex align-items-center gap-1";
                 }
 
                 <!-- 1. Почетна -->
-                <a class="@VratiKlasuDugmeta("Index")" asp-controller="Home" asp-action="Index">
+                <a class="@VratiKlasuDugmeta("Home")" asp-controller="Home" asp-action="Index">
                     <span>🏠</span> Почетна
                 </a>
 
                 <!-- 2. ЗУ (Са вашом сликом logoZU.jpg) -->
-                <a class="@VratiKlasuDugmeta("Zu")" asp-controller="Home" asp-action="Zu">
+                <a class="@VratiKlasuDugmeta("Zu")" asp-controller="Zu" asp-action="Index">
                     <img src="~/images/logoZU.jpg" alt="ЗУ" style="height: 18px; width: auto; object-fit: contain; display: inline-block;" />
                     <span>ЗУ</span>
                 </a>
 
                 <!-- 3. РФЗО (Са вашом новом сликом logoRFZO1.jpg) -->
-                <a class="@VratiKlasuDugmeta("Rfzo")" asp-controller="Home" asp-action="Rfzo">
+                <a class="@VratiKlasuDugmeta("Rfzo")" asp-controller="Rfzo" asp-action="Index">
                     <img src="~/images/logoRFZO1.jpg" alt="РФЗО" style="height: 18px; width: auto; object-fit: contain; display: inline-block;" />
                     <span>РФЗО</span>
                 </a>
 
                 <!-- 4. Извештај (Замењен емоџи са logoAnaliza.png) -->
-                <a class="@VratiKlasuDugmeta("KreirajIzvestaj")" asp-controller="Home" asp-action="KreirajIzvestaj">
+                <a class="@VratiKlasuDugmeta("Izvestaj")" asp-controller="Izvestaj" asp-action="Index">
                     <img src="~/images/logoAnaliza.png" alt="Извештај" style="height: 18px; width: auto; object-fit: contain; display: inline-block;" />
                     <span>Извештај</span>
                 </a>

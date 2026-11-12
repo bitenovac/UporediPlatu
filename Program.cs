@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using UporediPlate;
-using UporediPlate.Services; // Исправљено "Platu" у "Plate" да се поклопи са вашим пројектом
+using UporediPlate.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -14,10 +14,17 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 // 3. Регистрација сервиса за брзи увоз РФЗО података
 builder.Services.AddScoped<UvozRfzoServis>();
 
-
 // 4. Регистрација сервиса за брзи увоз података из Здравствених Установа
 builder.Services.AddScoped<UvozZuServis>();
 
+// 5. Регистрација сервиса за генерисање извештаја и поређење података
+builder.Services.AddScoped<IzvestajServis>();
+
+// 6. Регистрација сервиса за извоз извештаја у Excel
+builder.Services.AddScoped<ExcelIzvozServis>();
+
+// 7. Регистрација сервиса за извоз извештаја у PDF / ZIP
+builder.Services.AddScoped<PdfIzvozServis>();
 
 // Додавање подршке за MVC контролере и погледе
 builder.Services.AddControllersWithViews();
