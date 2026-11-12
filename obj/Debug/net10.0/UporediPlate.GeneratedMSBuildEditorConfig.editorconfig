@@ -35,28 +35,24 @@ build_property.EnableCodeStyleSeverity =
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcSG9tZVxJbmRleC5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
 
-[D:/Projekti/UporediPlatu/Views/Home/KreirajIzvestaj.cshtml]
-build_metadata.AdditionalFiles.TargetPath = Vmlld3NcSG9tZVxLcmVpcmFqSXp2ZXN0YWouY3NodG1s
-build_metadata.AdditionalFiles.CssScope = 
-
-[D:/Projekti/UporediPlatu/Views/Home/PregledUvozaRfzo.cshtml]
-build_metadata.AdditionalFiles.TargetPath = Vmlld3NcSG9tZVxQcmVnbGVkVXZvemFSZnpvLmNzaHRtbA==
-build_metadata.AdditionalFiles.CssScope = 
-
-[D:/Projekti/UporediPlatu/Views/Home/PregledUvozaZu.cshtml]
-build_metadata.AdditionalFiles.TargetPath = Vmlld3NcSG9tZVxQcmVnbGVkVXZvemFadS5jc2h0bWw=
-build_metadata.AdditionalFiles.CssScope = 
-
 [D:/Projekti/UporediPlatu/Views/Home/Privacy.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcSG9tZVxQcml2YWN5LmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 
 
-[D:/Projekti/UporediPlatu/Views/Home/Rfzo.cshtml]
-build_metadata.AdditionalFiles.TargetPath = Vmlld3NcSG9tZVxSZnpvLmNzaHRtbA==
+[D:/Projekti/UporediPlatu/Views/Izvestaj/Index.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcSXp2ZXN0YWpcSW5kZXguY3NodG1s
 build_metadata.AdditionalFiles.CssScope = 
 
-[D:/Projekti/UporediPlatu/Views/Home/Zu.cshtml]
-build_metadata.AdditionalFiles.TargetPath = Vmlld3NcSG9tZVxadS5jc2h0bWw=
+[D:/Projekti/UporediPlatu/Views/Izvestaj/IzvestajNepronadjeni.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcSXp2ZXN0YWpcSXp2ZXN0YWpOZXByb25hZGplbmkuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/Projekti/UporediPlatu/Views/Rfzo/Index.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcUmZ6b1xJbmRleC5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/Projekti/UporediPlatu/Views/Rfzo/PregledUvozaRfzo.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcUmZ6b1xQcmVnbGVkVXZvemFSZnpvLmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 
 
 [D:/Projekti/UporediPlatu/Views/Shared/Error.cshtml]
@@ -65,6 +61,14 @@ build_metadata.AdditionalFiles.CssScope =
 
 [D:/Projekti/UporediPlatu/Views/Shared/_ValidationScriptsPartial.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2hhcmVkXF9WYWxpZGF0aW9uU2NyaXB0c1BhcnRpYWwuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/Projekti/UporediPlatu/Views/Zu/Index.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcWnVcSW5kZXguY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/Projekti/UporediPlatu/Views/Zu/PregledUvozaZu.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcWnVcUHJlZ2xlZFV2b3phWnUuY3NodG1s
 build_metadata.AdditionalFiles.CssScope = 
 
 [D:/Projekti/UporediPlatu/Views/_ViewImports.cshtml]

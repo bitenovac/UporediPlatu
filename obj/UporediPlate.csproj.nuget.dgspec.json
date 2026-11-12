@@ -30,6 +30,10 @@
           }
         },
         "warningProperties": {
+          "noWarn": [
+            "NU1902",
+            "NU1903"
+          ],
           "warnAsError": [
             "NU1605"
           ]
@@ -46,6 +50,10 @@
           "framework": "net10.0",
           "targetAlias": "net10.0",
           "dependencies": {
+            "ClosedXML": {
+              "target": "Package",
+              "version": "[0.105.1, )"
+            },
             "ExcelDataReader": {
               "target": "Package",
               "version": "[3.9.0, )"
@@ -73,6 +81,10 @@
               "suppressParent": "All",
               "target": "Package",
               "version": "[10.0.0-preview.*, )"
+            },
+            "MigraDocCore.Rendering": {
+              "target": "Package",
+              "version": "[1.3.67, )"
             },
             "System.Security.Cryptography.Pkcs": {
               "target": "Package",
