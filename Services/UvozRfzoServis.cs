@@ -131,11 +131,12 @@ namespace UporediPlate.Services
                             if (izvornaTabela.Columns.Count < 4) continue;
 
                             string siroviJmbg = "";
-                            var jmbgObj = red[0]; // Исправљено са 'red' на 'red[0]'
+                            var jmbgObj = red[0];
                             if (jmbgObj != null && jmbgObj != DBNull.Value)
                             {
-                                if (decimal.TryParse(jmbgObj.ToString(), System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out decimal jmbgDec))
-                                    siroviJmbg = Math.Truncate(jmbgDec).ToString(System.Globalization.CultureInfo.InvariantCulture);
+                                var jmbgDec = DekodirajDecimal(jmbgObj);
+                                if (jmbgDec.HasValue)
+                                    siroviJmbg = Math.Truncate(jmbgDec.Value).ToString(System.Globalization.CultureInfo.InvariantCulture);
                                 else
                                     siroviJmbg = jmbgObj.ToString()?.Trim() ?? "";
                             }
@@ -144,16 +145,16 @@ namespace UporediPlate.Services
                             if (string.IsNullOrEmpty(siroviJmbg) || siroviJmbg.ToLower().Contains("jmbg") || siroviJmbg.Length < 13) continue;
 
                             string siroviLbo = "";
-                            var lboObj = red[1]; // Исправљено са 'red' на 'red[1]'
+                            var lboObj = red[1];
                             if (lboObj != null && lboObj != DBNull.Value)
                             {
-                                if (decimal.TryParse(lboObj.ToString(), System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out decimal lboDec))
-                                    siroviLbo = Math.Truncate(lboDec).ToString(System.Globalization.CultureInfo.InvariantCulture);
+                                var lboDec = DekodirajDecimal(lboObj);
+                                if (lboDec.HasValue)
+                                    siroviLbo = Math.Truncate(lboDec.Value).ToString(System.Globalization.CultureInfo.InvariantCulture);
                                 else
                                     siroviLbo = lboObj.ToString()?.Trim() ?? "";
                             }
 
-                            // Локална функција за читање исправљена да правилно референцира тренутни 'red' и 'izvornaTabela'
                             object ProcitajKolonu(int indeks, string tip)
                             {
                                 if (izvornaTabela.Columns.Count <= indeks) return DBNull.Value;
@@ -162,15 +163,13 @@ namespace UporediPlate.Services
 
                                 if (tip == "decimal")
                                 {
-                                    if (decimal.TryParse(val.ToString(), System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out decimal decRez))
-                                        return decRez;
-                                    return DBNull.Value;
+                                    var decRez = DekodirajDecimal(val);
+                                    return decRez.HasValue ? (object)decRez.Value : DBNull.Value;
                                 }
                                 if (tip == "int")
                                 {
-                                    if (decimal.TryParse(val.ToString(), System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out decimal decVal))
-                                        return Convert.ToInt32(Math.Truncate(decVal));
-                                    return 0;
+                                    var decVal = DekodirajDecimal(val);
+                                    return decVal.HasValue ? (object)Convert.ToInt32(Math.Truncate(decVal.Value)) : 0;
                                 }
                                 if (tip == "datum")
                                 {
@@ -183,15 +182,15 @@ namespace UporediPlate.Services
 
                             dtZaBazu.Rows.Add(
                                 siroviJmbg,
-siroviLbo,
-ProcitajKolonu(2, "string"),
-ProcitajKolonu(3, "string"),
-ProcitajKolonu(4, "string"),
-ProcitajKolonu(5, "string"),
-ProcitajKolonu(6, "string"),
-ProcitajKolonu(7, "string"),
-ProcitajKolonu(8, "datum"),
-ProcitajKolonu(9, "string"),
+                                siroviLbo,
+                                ProcitajKolonu(2, "string"),
+                                ProcitajKolonu(3, "string"),
+                                ProcitajKolonu(4, "string"),
+                                ProcitajKolonu(5, "string"),
+                                ProcitajKolonu(6, "string"),
+                                ProcitajKolonu(7, "string"),
+                                ProcitajKolonu(8, "datum"),
+                                ProcitajKolonu(9, "string"),
 ProcitajKolonu(10, "string"),
 ProcitajKolonu(11, "string"),
 ProcitajKolonu(12, "string"),
@@ -245,6 +244,30 @@ excelFajl.FileName
                 return (false, $"Грешка приликом увоза података: {ex.Message}");
             }
         }
+        private static decimal? DekodirajDecimal(object? obj)
+        {
+            if (obj == null || obj == DBNull.Value) return null;
+            if (obj is double d) return Convert.ToDecimal(d);
+            if (obj is decimal dec) return dec;
+            if (obj is float f) return Convert.ToDecimal(f);
+            if (obj is int i) return i;
+            if (obj is long l) return l;
+            string tekst = obj.ToString()?.Trim() ?? "";
+            if (string.IsNullOrWhiteSpace(tekst)) return null;
+            tekst = tekst.Replace(" ", "");
+            if (tekst.Contains('.') && tekst.Contains(','))
+            {
+                if (tekst.LastIndexOf(',') > tekst.LastIndexOf('.'))
+                    tekst = tekst.Replace(".", "").Replace(",", ".");
+                else
+                    tekst = tekst.Replace(",", "");
+            }
+            else if (tekst.Contains(','))
+            {
+                tekst = tekst.Replace(",", ".");
+            }
+            return decimal.TryParse(tekst, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out decimal rez) ? rez : null;
+        }
         public async Task<(bool Uspeh, string Poruka)> ObrisiUvoz(string vremeKljuc)
         {
             try
@@ -279,7 +302,8 @@ excelFajl.FileName
         private DateTime? KonvertujExcelDatum(object obj)
         {
             if (obj == null || string.IsNullOrWhiteSpace(obj.ToString())) return null;
-            string strVal = obj.ToString().Trim();
+            if (obj is DateTime dt) return dt;
+            string strVal = obj.ToString()!.Trim();
             if (strVal.Contains(".") || strVal.Contains("-"))
             {
                 if (DateTime.TryParse(strVal, out DateTime regularanDatum)) return regularanDatum;
@@ -289,11 +313,13 @@ excelFajl.FileName
                     return specDatum;
                 }
             }
-            if (double.TryParse(strVal, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out double brojDana))
+            var brojDana = DekodirajDecimal(obj);
+            if (brojDana.HasValue)
             {
                 try
                 {
-                    if (brojDana > 1 && brojDana < 2958465) return DateTime.FromOADate(brojDana);
+                    double dDana = Convert.ToDouble(brojDana.Value);
+                    if (dDana > 1 && dDana < 2958465) return DateTime.FromOADate(dDana);
                 }
                 catch { return null; }
             }

@@ -1,0 +1,54 @@
+@model UporediPlate.Models.SviIzvestajiViewModel
+@{
+    ViewData["Title"] = "Обједињени приказ извештаја";
+    bool imaPrvi = Model.IzabraniIzvestaji.Contains("NepronadjeniURfzo");
+    bool imaDrugi = Model.IzabraniIzvestaji.Contains("NepronadjeniUZu");
+}
+
+<div class="container mt-4 mb-5">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+        <div>
+            <h2 class="fw-bold h3 mb-1" style="color: #003b73;">Резултати провере (Више извештаја)</h2>
+            <p class="text-muted small mb-0">Изаберите картицу испод да бисте прегледали појединачне извештаје.</p>
+        </div>
+        <a asp-controller="Izvestaj" asp-action="Index" class="btn btn-warning btn-sm px-3 fw-semibold shadow-sm">
+            ← Назад на избор фајлова
+        </a>
+    </div>
+
+    <ul class="nav nav-tabs mb-3 fw-semibold" id="izvestajiTab" role="tablist">
+        @if (imaPrvi)
+        {
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="tab1-btn" data-bs-toggle="tab" data-bs-target="#tab1" type="button" role="tab">
+                    1. У ЗУ, нису у РФЗО <span class="badge bg-primary ms-1">@(Model.NepronadjeniURfzo?.Count ?? 0)</span>
+                </button>
+            </li>
+        }
+        @if (imaDrugi)
+        {
+            <li class="nav-item" role="presentation">
+                <button class="nav-link @(!imaPrvi ? "active" : "")" id="tab2-btn" data-bs-toggle="tab" data-bs-target="#tab2" type="button" role="tab">
+                    2. У РФЗО, нису у ЗУ <span class="badge bg-primary ms-1">@(Model.NepronadjeniUZu?.Count ?? 0)</span>
+                </button>
+            </li>
+        }
+    </ul>
+
+    <div class="tab-content" id="izvestajiTabContent">
+        @if (imaPrvi)
+        {
+            ViewBag.IzabraniKljucevi = Model.IzabraniKljuceviStr;
+            <div class="tab-pane fade show active" id="tab1" role="tabpanel">
+                <partial name="IzvestajNepronadjeni" model="Model.NepronadjeniURfzo" />
+            </div>
+        }
+        @if (imaDrugi)
+        {
+            ViewBag.IzabraniKljucevi = Model.IzabraniKljuceviStr;
+            <div class="tab-pane fade @(!imaPrvi ? "show active" : "")" id="tab2" role="tabpanel">
+                <partial name="IzvestajNepronadjeniUZu" model="Model.NepronadjeniUZu" />
+            </div>
+        }
+    </div>
+</div>

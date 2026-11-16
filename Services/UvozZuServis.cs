@@ -40,7 +40,6 @@ namespace UporediPlate.Services
                     .GroupBy(x => new { x.PeriodUvoza, x.DatumUvozaPodataka })
                     .Select(g => new
                     {
-                        // Читамо вредности ШифраЗУ и Ниво из групе и спајамо их у тражени назив
                         SifraZu = g.Max(x => x.SifraZu) ?? "Непознато",
                         Nivo = g.Max(x => x.Nivo) ?? "Непознато",
                         PeriodUvoza = g.Key.PeriodUvoza,
@@ -52,7 +51,6 @@ namespace UporediPlate.Services
 
                 foreach (var g in grupe)
                 {
-                    // Формирамо коначни приказани назив фајла
                     string formatiraniNaziv = $"{g.SifraZu}_{g.Nivo}.xlsx";
                     dtIstorija.Rows.Add(formatiraniNaziv, g.PeriodUvoza, g.DatumUvozaPodataka, g.BrojRedova);
                 }
@@ -64,7 +62,6 @@ namespace UporediPlate.Services
 
             return dtIstorija;
         }
-
 
         public async Task<(bool Uspeh, string Poruka)> ObradiZuExcel(IFormFile excelFajl, DateTime period)
         {
@@ -145,7 +142,9 @@ namespace UporediPlate.Services
                             var jmbgObj = red[5];
                             if (jmbgObj != null && jmbgObj != DBNull.Value)
                             {
-                                if (decimal.TryParse(jmbgObj.ToString(), System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out decimal jmbgDec))
+                                if (jmbgObj is double dJmbg)
+                                    siroviJmbg = Math.Truncate(dJmbg).ToString(System.Globalization.CultureInfo.InvariantCulture);
+                                else if (decimal.TryParse(jmbgObj.ToString()?.Replace(",", "."), System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out decimal jmbgDec))
                                     siroviJmbg = Math.Truncate(jmbgDec).ToString(System.Globalization.CultureInfo.InvariantCulture);
                                 else
                                     siroviJmbg = jmbgObj.ToString()?.Trim() ?? "";
@@ -153,18 +152,6 @@ namespace UporediPlate.Services
 
                             if (siroviJmbg.Length == 12) siroviJmbg = "0" + siroviJmbg;
                             if (string.IsNullOrEmpty(siroviJmbg) || siroviJmbg.Length < 13 || siroviJmbg.ToLower().Contains("jmbg")) continue;
-
-                            decimal DekodirajDecimal(object obj)
-                            {
-                                if (obj == null || obj == DBNull.Value || string.IsNullOrWhiteSpace(obj.ToString())) return 0;
-                                return decimal.TryParse(obj.ToString(), System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out decimal rez) ? rez : 0;
-                            }
-
-                            int DekodirajInt(object obj)
-                            {
-                                if (obj == null || obj == DBNull.Value || string.IsNullOrWhiteSpace(obj.ToString())) return 0;
-                                return decimal.TryParse(obj.ToString(), System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out decimal decVal) ? Convert.ToInt32(Math.Truncate(decVal)) : 0;
-                            }
 
                             dtZaBazu.Rows.Add(
                                 red[0]?.ToString()?.Trim() ?? "",
@@ -224,29 +211,52 @@ namespace UporediPlate.Services
                 return (false, $"Грешка: {ex.Message}");
             }
         }
-
-        // ДОДАТО: Логика за сигурно брисање ЗУ увоза
+        private static decimal DekodirajDecimal(object? obj)
+        {
+            if (obj == null || obj == DBNull.Value) return 0;
+            if (obj is double d) return Convert.ToDecimal(d);
+            if (obj is decimal dec) return dec;
+            if (obj is float f) return Convert.ToDecimal(f);
+            if (obj is int i) return i;
+            if (obj is long l) return l;
+            string tekst = obj.ToString()?.Trim() ?? "";
+            if (string.IsNullOrWhiteSpace(tekst)) return 0;
+            tekst = tekst.Replace(" ", "");
+            if (tekst.Contains('.') && tekst.Contains(','))
+            {
+                if (tekst.LastIndexOf(',') > tekst.LastIndexOf('.'))
+                    tekst = tekst.Replace(".", "").Replace(",", ".");
+                else
+                    tekst = tekst.Replace(",", "");
+            }
+            else if (tekst.Contains(','))
+            {
+                tekst = tekst.Replace(",", ".");
+            }
+            return decimal.TryParse(tekst, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out decimal rez) ? rez : 0;
+        }
+        private static int DekodirajInt(object? obj)
+        {
+            return Convert.ToInt32(Math.Truncate(DekodirajDecimal(obj)));
+        }
+        // Логика за сигурно брисање ЗУ увоза
         public async Task<(bool Uspeh, string Poruka)> ObrisiUvoz(string vremeKljuc)
         {
             try
             {
                 if (string.IsNullOrEmpty(vremeKljuc) || vremeKljuc.Length < 14)
                     return (false, "Неисправан временски кључ.");
-
                 int godina = int.Parse(vremeKljuc.Substring(0, 4));
                 int mesec = int.Parse(vremeKljuc.Substring(4, 2));
                 int dan = int.Parse(vremeKljuc.Substring(6, 2));
                 int sat = int.Parse(vremeKljuc.Substring(8, 2));
                 int minut = int.Parse(vremeKljuc.Substring(10, 2));
                 int sekund = int.Parse(vremeKljuc.Substring(12, 2));
-
                 DateTime pocetakSekunde = new DateTime(godina, mesec, dan, sat, minut, sekund);
                 DateTime krajSekunde = pocetakSekunde.AddSeconds(1);
-
                 var zaBrisanje = _context.ZuUvozi
-                    .Where(x => x.DatumUvozaPodataka >= pocetakSekunde && x.DatumUvozaPodataka < krajSekunde)
-                    .ToList();
-
+                .Where(x => x.DatumUvozaPodataka >= pocetakSekunde && x.DatumUvozaPodataka < krajSekunde)
+                .ToList();
                 if (zaBrisanje.Any())
                 {
                     _context.ZuUvozi.RemoveRange(zaBrisanje);

@@ -3,40 +3,37 @@
 
 @{
     ViewData["Title"] = "РФЗО - Детаљан преглед увоза";
-    
-    // Uzimamo sva svojstva (kolone) iz klase RfzoUvoz dinamički pomoću Reflection-a
     var svojstva = typeof(UporediPlate.Models.RfzoUvoz).GetProperties(BindingFlags.Public | BindingFlags.Instance);
 }
 
 <div class="container-fluid mt-4 px-4">
     <!-- Заглавље и Акције -->
-    <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
+    <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom">
         <div>
-            <h2 class="text-success fw-bold mb-1">
+            <h2 class="text-success fw-bold h3 mb-1">
                 👁️ Детаљан преглед РФЗО увоза
             </h2>
-            <p class="lead text-muted small mb-0">Приказ свих увезених редова и поља из селектованог документа</p>
+            <p class="text-muted small mb-0">Приказ свих увезених редова и поља из селектованог документа</p>
         </div>
         <div class="d-flex gap-2">
-            <a href="/Home/Rfzo" class="btn btn-outline-secondary px-3 fw-bold">
-                ⬅️ Назад на увоз
+            <a asp-controller="Rfzo" asp-action="Index"
+               class="btn btn-warning text-dark d-flex align-items-center gap-2 fw-semibold shadow-sm">
+                <span>⬅️</span> Повратак на РФЗО страницу
             </a>
-            <button class="btn btn-primary px-3 fw-bold" onclick="izveziUExcel()">
-                🟢 Извоз у Excel
-            </button>
-            <button class="btn btn-success px-3 fw-bold" onclick="window.print()">
-                🖨️ Штампај
+            <button class="btn btn-success d-flex align-items-center gap-2 fw-semibold shadow-sm"
+                    onclick="izveziUExcel()">
+                <span>📥</span> Извоз у Excel
             </button>
         </div>
     </div>
 
     <!-- Главна табела са свим динамичким подацима -->
-    <div class="card shadow-lg border-0 mb-5">
-        <div class="card-header bg-dark text-white py-3">
-            <h5 class="mb-0 d-flex justify-content-between align-items-center">
+    <div class="card shadow-sm border-0 rounded-3 overflow-hidden mb-4">
+        <div class="card-header bg-dark text-white py-2 px-3">
+            <h6 class="mb-0 d-flex justify-content-between align-items-center">
                 <span>📋 Комплетан садржај из базе података</span>
                 <span class="badge bg-success rounded-pill px-3">Укупно записа: @(Model?.Count() ?? 0)</span>
-            </h5>
+            </h6>
         </div>
         <div class="card-body p-0">
             @if (Model == null || !Model.Any())
@@ -48,11 +45,10 @@
             else
             {
                 <div class="table-responsive">
-                    <table id="tabela-rfzo" class="table table-hover table-striped mb-0 align-middle small">
-                        <thead class="table-secondary text-uppercase fs-7">
+                    <table id="tabela-rfzo" class="table table-sm table-hover table-striped mb-0 align-middle small" style="font-size: 0.8rem;">
+                        <thead class="table-dark sticky-top align-middle" style="background-color: #263238; z-index: 1;">
                             <tr>
-                                <th class="ps-3" style="width: 60px;">#</th>
-                                @* Dinamički generišemo nazive kolona uz promenu za PeriodUvoza *@
+                                <th class="ps-3" style="width: 50px;">#</th>
                                 @foreach (var prop in svojstva)
                                 {
                                     if (prop.Name == "PeriodUvoza")
@@ -67,7 +63,9 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @{ int brojac = 1; }
+                            @{
+                                int brojac = 1;
+                            }
                             @foreach (var stavka in Model)
                             {
                                 <tr>
@@ -75,26 +73,24 @@
                                     @foreach (var prop in svojstva)
                                     {
                                         var vrednost = prop.GetValue(stavka);
-                                        
+
                                         if (vrednost == null)
                                         {
                                             <td><em class="text-muted">/</em></td>
                                         }
-                                        @* 1. Rešenje za JMBG (Forsiranje teksta u Excelu i 13 karaktera sa vodećim nulama) *@
                                         else if (prop.Name.ToUpper() == "JMBG")
                                         {
-                                            string jmbgTekst = vrednost.ToString().Trim().PadLeft(13, '0');
+                                            string jmbgTekst = (vrednost.ToString() ?? "").Trim().PadLeft(13, '0');
                                             <td style="vnd.ms-excel.numberformat:@@" class="text-start">@jmbgTekst</td>
                                         }
-                                        @* 2. Rešenje za PeriodUvoza (Forsiranje tekstualnog formata u Excelu da spreči 92.026) *@
                                         else if (prop.Name == "PeriodUvoza" && vrednost is DateTime datumPerioda)
                                         {
                                             string periodFormatiran = datumPerioda.ToString("MM/yyyy");
-                                            <td style="vnd.ms-excel.numberformat:@@" class="fw-bold text-primary">@periodFormatiran</td>
+                                            <td style="vnd.ms-excel.numberformat:@@">@periodFormatiran</td>
                                         }
                                         else if (vrednost is decimal || vrednost is double || vrednost is float)
                                         {
-                                            <td class="text-end fw-bold">@string.Format("{0:N2}", vrednost)</td>
+                                            <td class="text-end">@string.Format("{0:N2}", vrednost)</td>
                                         }
                                         else if (vrednost is DateTime vreme)
                                         {
@@ -118,22 +114,38 @@
 
 <style>
     .table th {
-        font-weight: 700;
-        letter-spacing: 0.5px;
+        font-weight: 600;
+        letter-spacing: 0.3px;
         white-space: nowrap;
+        vertical-align: middle;
     }
+
     .table td {
         white-space: nowrap;
     }
+
     .table-responsive {
-        max-height: 73vh;
+        max-height: 66vh;
         overflow-y: auto;
         overflow-x: auto;
     }
+
     @@media print {
-        .btn, border-bottom { display: none !important; }
-        .card { shadow: none !important; border: 1px solid #ccc !important; }
-        .table-responsive { max-height: none !important; overflow-y: visible !important; overflow-x: visible !important; }
+        .btn,
+        .border-bottom {
+            display: none !important;
+        }
+
+        .card {
+            box-shadow: none !important;
+            border: 1px solid #ccc !important;
+        }
+
+        .table-responsive {
+            max-height: none !important;
+            overflow-y: visible !important;
+            overflow-x: visible !important;
+        }
     }
 </style>
 
@@ -144,21 +156,19 @@
             if (!tabela) return;
 
             let html = tabela.outerHTML;
-            
-            // Dodat Microsoft Excel stilski kod unutar html-a za pravilno procesiranje CSS-a u Excelu
-            const style = `<style> td { white-space:nowrap; } </style>`;
+            const style = '<style> td { white-space:nowrap; } </style>';
             const meta = '<meta http-equiv="content-type" content="application/vnd.ms-excel; charset=UTF-8">';
-            const template = `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://w3.org">${meta}<head>${style}</head><body>${html}</body></html>`;
-            
+            const template = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://w3.org">' + meta + '<head>' + style + '</head><body>' + html + '</body></html>';
+
             const blob = new Blob([template], { type: "application/vnd.ms-excel" });
             const url = URL.createObjectURL(blob);
-            
+
             const a = document.createElement("a");
             a.href = url;
-            
-            const datum = new Date().toISOString().slice(0,10);
-            a.download = `Pregled_Uvoza_RFZO_${datum}.xls`;
-            
+
+            const datum = new Date().toISOString().slice(0, 10);
+            a.download = 'Pregled_Uvoza_RFZO_' + datum + '.xls';
+
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);

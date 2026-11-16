@@ -1,6 +1,9 @@
 using Microsoft.EntityFrameworkCore;
 using UporediPlate;
 using UporediPlate.Services;
+using UporediPlate.Services.Izvestaji;
+using UporediPlate.Services.Excel;
+using UporediPlate.Services.Pdf;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -18,13 +21,19 @@ builder.Services.AddScoped<UvozRfzoServis>();
 builder.Services.AddScoped<UvozZuServis>();
 
 // 5. Регистрација сервиса за генерисање извештаја и поређење података
-builder.Services.AddScoped<IzvestajServis>();
+builder.Services.AddScoped<IzvestajPomocnik>();
+builder.Services.AddScoped<IzvestajNepronadjeniURfzoServis>();
+builder.Services.AddScoped<IzvestajNepronadjeniUZuServis>();
 
 // 6. Регистрација сервиса за извоз извештаја у Excel
-builder.Services.AddScoped<ExcelIzvozServis>();
+builder.Services.AddScoped<ExcelPomocnik>();
+builder.Services.AddScoped<ExcelNepronadjeniURfzoServis>();
+builder.Services.AddScoped<ExcelNepronadjeniUZuServis>();
 
 // 7. Регистрација сервиса за извоз извештаја у PDF / ZIP
-builder.Services.AddScoped<PdfIzvozServis>();
+builder.Services.AddScoped<PdfPomocnik>();
+builder.Services.AddScoped<PdfNepronadjeniURfzoServis>();
+builder.Services.AddScoped<PdfNepronadjeniUZuServis>();
 
 // Додавање подршке за MVC контролере и погледе
 builder.Services.AddControllersWithViews();

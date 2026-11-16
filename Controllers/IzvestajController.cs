@@ -6,26 +6,38 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using UporediPlate.Models;
 using UporediPlate.Services;
+using UporediPlate.Services.Izvestaji;
+using UporediPlate.Services.Excel;
+using UporediPlate.Services.Pdf;
 
 namespace UporediPlate.Controllers
 {
     public class IzvestajController : Controller
     {
         private readonly UvozZuServis _uvozZuServis;
-        private readonly IzvestajServis _izvestajServis;
-        private readonly ExcelIzvozServis _excelServis;
-        private readonly PdfIzvozServis _pdfServis;
+        private readonly IzvestajNepronadjeniURfzoServis _nepronadjeniURfzoServis;
+        private readonly IzvestajNepronadjeniUZuServis _nepronadjeniUZuServis;
+        private readonly ExcelNepronadjeniURfzoServis _excelNepronadjeniURfzo;
+        private readonly ExcelNepronadjeniUZuServis _excelNepronadjeniUZu;
+        private readonly PdfNepronadjeniURfzoServis _pdfNepronadjeniURfzo;
+        private readonly PdfNepronadjeniUZuServis _pdfNepronadjeniUZu;
 
         public IzvestajController(
             UvozZuServis uvozZuServis,
-            IzvestajServis izvestajServis,
-            ExcelIzvozServis excelServis,
-            PdfIzvozServis pdfServis)
+            IzvestajNepronadjeniURfzoServis nepronadjeniURfzoServis,
+            IzvestajNepronadjeniUZuServis nepronadjeniUZuServis,
+            ExcelNepronadjeniURfzoServis excelNepronadjeniURfzo,
+            ExcelNepronadjeniUZuServis excelNepronadjeniUZu,
+            PdfNepronadjeniURfzoServis pdfNepronadjeniURfzo,
+            PdfNepronadjeniUZuServis pdfNepronadjeniUZu)
         {
             _uvozZuServis = uvozZuServis;
-            _izvestajServis = izvestajServis;
-            _excelServis = excelServis;
-            _pdfServis = pdfServis;
+            _nepronadjeniURfzoServis = nepronadjeniURfzoServis;
+            _nepronadjeniUZuServis = nepronadjeniUZuServis;
+            _excelNepronadjeniURfzo = excelNepronadjeniURfzo;
+            _excelNepronadjeniUZu = excelNepronadjeniUZu;
+            _pdfNepronadjeniURfzo = pdfNepronadjeniURfzo;
+            _pdfNepronadjeniUZu = pdfNepronadjeniUZu;
         }
 
         [HttpGet]
@@ -60,19 +72,52 @@ namespace UporediPlate.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> GenerisiIzvestaj(List<string> izabraniKljucevi)
+        public async Task<IActionResult> GenerisiIzvestaj(List<string> izabraniKljucevi, List<string> izabraniIzvestaji)
         {
-            if (izabraniKljucevi == null || izabraniKljucevi.Count == 0)
+            if (izabraniKljucevi == null || izabraniKljucevi.Count == 0 ||
+                izabraniIzvestaji == null || izabraniIzvestaji.Count == 0)
             {
-                TempData["GreskaPoruka"] = "Молимо изаберите бар један фајл за креирање извештаја.";
+                TempData["GreskaPoruka"] = "Молимо изаберите бар један извештај и бар један ЗУ фајл.";
                 return RedirectToAction(nameof(Index));
             }
 
-            var nepronadjeni = await _izvestajServis.GenerisiIzvestajNepronadjeniURfzoAsync(izabraniKljucevi);
             ViewBag.IzabraniKljucevi = string.Join(",", izabraniKljucevi);
-            return View("IzvestajNepronadjeni", nepronadjeni);
+
+            // Случај 1: Изабран само 1. извештај (У ЗУ, а нису у РФЗО)
+            if (izabraniIzvestaji.Count == 1 && izabraniIzvestaji.Contains("NepronadjeniURfzo"))
+            {
+                var nepronadjeni = await _nepronadjeniURfzoServis.GenerisiAsync(izabraniKljucevi);
+                return View("IzvestajNepronadjeni", nepronadjeni);
+            }
+
+            // Случај 2: Изабран само 2. извештај (У РФЗО, а нису у ЗУ)
+            if (izabraniIzvestaji.Count == 1 && izabraniIzvestaji.Contains("NepronadjeniUZu"))
+            {
+                var nepronadjeniUZu = await _nepronadjeniUZuServis.GenerisiAsync(izabraniKljucevi);
+                return View("IzvestajNepronadjeniUZu", nepronadjeniUZu);
+            }
+
+            // Случај 3: Изабрано више извештаја (или сви)
+            var objedinjeniModel = new SviIzvestajiViewModel
+            {
+                IzabraniIzvestaji = izabraniIzvestaji,
+                IzabraniKljuceviStr = string.Join(",", izabraniKljucevi)
+            };
+
+            if (izabraniIzvestaji.Contains("NepronadjeniURfzo"))
+            {
+                objedinjeniModel.NepronadjeniURfzo = await _nepronadjeniURfzoServis.GenerisiAsync(izabraniKljucevi);
+            }
+
+            if (izabraniIzvestaji.Contains("NepronadjeniUZu"))
+            {
+                objedinjeniModel.NepronadjeniUZu = await _nepronadjeniUZuServis.GenerisiAsync(izabraniKljucevi);
+            }
+
+            return View("SviIzvestaji", objedinjeniModel);
         }
 
+        // ИЗВОЗ ЗА ИЗВЕШТАЈ 1 (У ЗУ, нису у РФЗО)
         [HttpPost]
         public async Task<IActionResult> IzvozUExcel(string izabraniKljuceviStr)
         {
@@ -80,10 +125,10 @@ namespace UporediPlate.Controllers
                 return RedirectToAction(nameof(Index));
 
             var kljucevi = izabraniKljuceviStr.Split(',', StringSplitOptions.RemoveEmptyEntries).ToList();
-            var podaci = await _izvestajServis.GenerisiIzvestajNepronadjeniURfzoAsync(kljucevi);
+            var podaci = await _nepronadjeniURfzoServis.GenerisiAsync(kljucevi);
 
-            byte[] content = _excelServis.GenerisiExcelNepronadjeni(podaci);
-            string nazivFajla = $"Izvestaj_Kontrola_Zarada_{DateTime.Now:yyyyMMdd_HHmm}.xlsx";
+            byte[] content = _excelNepronadjeniURfzo.Generisi(podaci);
+            string nazivFajla = $"Izvestaj_Nepronadjeni_U_RFZO_{DateTime.Now:yyyyMMdd_HHmm}.xlsx";
             return File(content, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", nazivFajla);
         }
 
@@ -94,12 +139,43 @@ namespace UporediPlate.Controllers
                 return RedirectToAction(nameof(Index));
 
             var kljucevi = izabraniKljuceviStr.Split(',', StringSplitOptions.RemoveEmptyEntries).ToList();
-            var podaci = await _izvestajServis.GenerisiIzvestajNepronadjeniURfzoAsync(kljucevi);
+            var podaci = await _nepronadjeniURfzoServis.GenerisiAsync(kljucevi);
 
             if (podaci.Count == 0)
                 return RedirectToAction(nameof(Index));
 
-            var (sadrzaj, contentType, nazivFajla) = _pdfServis.GenerisiPdfIliZipNepronadjeni(podaci);
+            var (sadrzaj, contentType, nazivFajla) = _pdfNepronadjeniURfzo.Generisi(podaci);
+            return File(sadrzaj, contentType, nazivFajla);
+        }
+
+        // ИЗВОЗ ЗА ИЗВЕШТАЈ 2 (У РФЗО, нису у ЗУ)
+        [HttpPost]
+        public async Task<IActionResult> IzvozUExcelNepronadjeniUZu(string izabraniKljuceviStr)
+        {
+            if (string.IsNullOrWhiteSpace(izabraniKljuceviStr))
+                return RedirectToAction(nameof(Index));
+
+            var kljucevi = izabraniKljuceviStr.Split(',', StringSplitOptions.RemoveEmptyEntries).ToList();
+            var podaci = await _nepronadjeniUZuServis.GenerisiAsync(kljucevi);
+
+            byte[] content = _excelNepronadjeniUZu.Generisi(podaci);
+            string nazivFajla = $"Izvestaj_Nepronadjeni_U_ZU_{DateTime.Now:yyyyMMdd_HHmm}.xlsx";
+            return File(content, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", nazivFajla);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> IzvozUPdfNepronadjeniUZu(string izabraniKljuceviStr)
+        {
+            if (string.IsNullOrWhiteSpace(izabraniKljuceviStr))
+                return RedirectToAction(nameof(Index));
+
+            var kljucevi = izabraniKljuceviStr.Split(',', StringSplitOptions.RemoveEmptyEntries).ToList();
+            var podaci = await _nepronadjeniUZuServis.GenerisiAsync(kljucevi);
+
+            if (podaci.Count == 0)
+                return RedirectToAction(nameof(Index));
+
+            var (sadrzaj, contentType, nazivFajla) = _pdfNepronadjeniUZu.Generisi(podaci);
             return File(sadrzaj, contentType, nazivFajla);
         }
     }
