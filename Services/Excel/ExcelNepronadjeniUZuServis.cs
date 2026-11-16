@@ -31,16 +31,37 @@ namespace UporediPlate.Services.Excel
                 string nazivLista = _pomocnik.OcistiNazivLista(grupa.Key);
 
                 var ws = workbook.Worksheets.Add(nazivLista);
+                int brojKolona = 4;
 
+                // 1. Главни наслов извештаја
                 _pomocnik.PrimeniZaglavljeLista(
                     ws,
-                    "ИЗВЕШТАЈ: РАДНИЦИ НА СПИСКУ РФЗО-А КОЈИ НИСУ НА СПИСКУ ЗУ",
-                    $"Шифра ЗУ: {prvi.SifraZuNormalizovana} — {prvi.NazivZu}",
-                    brojKolona: 8,
-                    landscape: true);
+                    "Радници на списку РФЗО-а који нису на списку ЗУ",
+                    $"Шифра ЗУ: {prvi.SifraZuNormalizovana} | Назив ЗУ: {prvi.NazivZu} (Број радника: {grupa.Count()})",
+                    brojKolona: brojKolona,
+                    landscape: false);
 
+                // Стилизовање 2. реда (подаци о ЗУ) у зелену боју као на екрану
+                var zuRange = ws.Range(2, 1, 2, brojKolona);
+                zuRange.Style.Fill.BackgroundColor = XLColor.FromHtml("#198754");
+                zuRange.Style.Font.FontColor = XLColor.White;
+                zuRange.Style.Font.Bold = true;
+
+                // 3. Жути ред са разлогом неслагања
+                int statusRow = 3;
+                var statusRange = ws.Range(statusRow, 1, statusRow, brojKolona);
+                statusRange.Merge();
+                statusRange.Value = "Радник је на списку РФЗО-а, али није достављен у ЗУ фајлу";
+                statusRange.Style.Fill.BackgroundColor = XLColor.FromHtml("#FFC107");
+                statusRange.Style.Font.FontColor = XLColor.FromHtml("#212529");
+                statusRange.Style.Font.Bold = true;
+                statusRange.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Left;
+                statusRange.Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
+                ws.Row(statusRow).Height = 22;
+
+                // 4. Заглавље табеле (4 колоне)
                 int headerRow = 4;
-                string[] kolone = { "Период", "ЈМБГ", "Презиме и име", "Радно место / Занимање", "Коеф. 1", "% РВ", "Престанак РО", "Статус провере" };
+                string[] kolone = { "Период", "ЈМБГ", "Презиме и име", "Радно место / Занимање" };
                 _pomocnik.PrimeniZaglavljeTabele(ws, headerRow, kolone);
 
                 int trenutniRed = headerRow + 1;
@@ -57,22 +78,11 @@ namespace UporediPlate.Services.Excel
                     ws.Cell(trenutniRed, 3).Value = $"{item.Prezime} {item.Ime}";
                     ws.Cell(trenutniRed, 4).Value = string.IsNullOrWhiteSpace(item.NazivRM) ? item.NazivZanimanja : item.NazivRM;
 
-                    ws.Cell(trenutniRed, 5).Value = item.Koef1.HasValue ? item.Koef1.Value.ToString("N4") : "-";
-                    ws.Cell(trenutniRed, 5).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Right;
-
-                    ws.Cell(trenutniRed, 6).Value = item.ProcRVr.HasValue ? item.ProcRVr.Value.ToString("N2") : "-";
-                    ws.Cell(trenutniRed, 6).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Right;
-
-                    ws.Cell(trenutniRed, 7).Value = item.DatumPrestankaRO.HasValue ? item.DatumPrestankaRO.Value.ToString("dd.MM.yyyy") : "-";
-                    ws.Cell(trenutniRed, 7).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
-
-                    ws.Cell(trenutniRed, 8).Value = item.RazlogNeslaganja;
-
-                    _pomocnik.StilizujRedPodataka(ws, trenutniRed, brojKolona: 8);
+                    _pomocnik.StilizujRedPodataka(ws, trenutniRed, brojKolona: brojKolona);
                     trenutniRed++;
                 }
 
-                _pomocnik.PodesiSirinuKolona(ws, headerRow, trenutniRed - 1, brojKolona: 8, 4, 8);
+                _pomocnik.PodesiSirinuKolona(ws, headerRow, trenutniRed - 1, brojKolona: brojKolona, 4);
             }
 
             return _pomocnik.KonvertujUBajtove(workbook);

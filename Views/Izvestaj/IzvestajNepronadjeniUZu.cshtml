@@ -6,6 +6,11 @@
         .ThenBy(x => x.Prezime)
         .ThenBy(x => x.Ime)
         .ToList();
+
+    var prvaStavka = sortiraniModel?.FirstOrDefault();
+    int brojZaPrvuUstanovu = prvaStavka != null
+        ? sortiraniModel!.Count(x => x.SifraZuNormalizovana == prvaStavka.SifraZuNormalizovana)
+        : 0;
 }
 
 <style>
@@ -16,6 +21,15 @@
         font-weight: 600;
     }
 
+    .zu-naslovna-linija {
+        background-color: #198754 !important;
+        color: #ffffff !important;
+        border-bottom: 2px solid #146c43 !important;
+        font-weight: 700;
+        font-size: 0.86rem;
+        letter-spacing: 0.2px;
+    }
+
     .zu-naslovna-linija td {
         background-color: #198754 !important;
         color: #ffffff !important;
@@ -24,6 +38,14 @@
         font-weight: 700;
         font-size: 0.86rem;
         letter-spacing: 0.2px;
+    }
+
+    .status-zuta-linija {
+        background-color: #ffc107 !important;
+        color: #212529 !important;
+        border-bottom: 2px solid #e0a800 !important;
+        font-weight: 600;
+        font-size: 0.84rem;
     }
 
     .btn-nazad-zuto {
@@ -38,13 +60,35 @@
         border-color: #d39e00;
         color: #000000;
     }
+
+    @@media print {
+        header,
+        footer,
+        .no-print {
+            display: none !important;
+        }
+
+        .container {
+            max-width: 100% !important;
+            width: 100% !important;
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+
+        body {
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+        }
+    }
 </style>
 
 <div class="container mt-4 mb-5">
     <div class="d-flex flex-wrap justify-content-between align-items-end gap-2 mb-3">
         <div>
             <h2 class="fw-bold h3 mb-1" style="color: #003b73;">Радници на списку РФЗО-а који нису на списку ЗУ</h2>
-            <p class="text-muted small mb-0">Приказ запослених из РФЗО евиденције (за изабране ЗУ установе и периоде) чији се ЈМБГ не налази у достављеним ЗУ фајловима.</p>
+            <p class="text-muted small mb-0">
+                Приказ запослених из РФЗО евиденције (за изабране ЗУ установе и периоде) чији се ЈМБГ не налази у достављеним ЗУ фајловима.
+            </p>
         </div>
 
         <div class="d-flex align-items-center justify-content-end gap-2 ms-auto no-print">
@@ -69,12 +113,29 @@
     </div>
 
     <div class="card shadow-sm border-0 rounded-3 overflow-hidden">
-        <div class="card-header text-white py-2 px-3 d-flex justify-content-between align-items-center"
-             style="background-color: #0054a6; font-size: 0.9rem;">
-            <span>Пронађена неслагања (РФЗО без поклапања у ЗУ)</span>
-            <span class="badge bg-light text-dark">Укупно радника: @(sortiraniModel?.Count ?? 0)</span>
+        @if (prvaStavka != null)
+        {
+            <!-- 1. Зелена линија са подацима о ЗУ на самом врху -->
+            <div class="zu-naslovna-linija py-2 px-3 d-flex flex-wrap justify-content-between align-items-center gap-2">
+                <span>
+                    Шифра ЗУ: @prvaStavka.SifraZuNormalizovana &nbsp;|&nbsp; Назив ЗУ: @prvaStavka.NazivZu
+                </span>
+                <div class="d-flex align-items-center gap-2">
+                    <span class="badge bg-light text-dark">Број радника: @brojZaPrvuUstanovu</span>
+                    @if (sortiraniModel!.Count > brojZaPrvuUstanovu)
+                    {
+                        <span class="badge bg-dark text-white">Укупно радника: @sortiraniModel.Count</span>
+                    }
+                </div>
+            </div>
+        }
+
+        <!-- 2. Жута линија са разлогом неслагања -->
+        <div class="status-zuta-linija py-2 px-3">
+            Радник је на списку РФЗО-а, али није достављен у ЗУ фајлу
         </div>
 
+        <!-- 3. Табела са 4 колоне -->
         <div class="table-responsive">
             <table class="table table-hover table-striped align-middle mb-0" style="font-size: 0.82rem;">
                 <thead class="rfzo-tabela-zaglavlje">
@@ -83,16 +144,12 @@
                         <th>ЈМБГ</th>
                         <th>Презиме и име</th>
                         <th>Радно место / Занимање</th>
-                        <th>Коеф. 1</th>
-                        <th>% РВ</th>
-                        <th>Престанак РО</th>
-                        <th>Статус провере</th>
                     </tr>
                 </thead>
                 <tbody>
                     @if (sortiraniModel != null && sortiraniModel.Count > 0)
                     {
-                        string trenutnaSifraZu = string.Empty;
+                        string trenutnaSifraZu = prvaStavka!.SifraZuNormalizovana;
 
                         foreach (var item in sortiraniModel)
                         {
@@ -102,7 +159,7 @@
                                 int brojZaUstanovu = sortiraniModel.Count(x => x.SifraZuNormalizovana == trenutnaSifraZu);
 
                                 <tr class="zu-naslovna-linija">
-                                    <td colspan="8" class="py-2 px-3">
+                                    <td colspan="4" class="py-2 px-3">
                                         <div class="d-flex justify-content-between align-items-center">
                                             <span>
                                                 Шифра ЗУ: @item.SifraZuNormalizovana &nbsp;|&nbsp; Назив ЗУ: @item.NazivZu
@@ -118,19 +175,13 @@
                                 <td class="font-monospace">@item.Jmbg</td>
                                 <td class="fw-semibold">@item.Prezime @item.Ime</td>
                                 <td>@(string.IsNullOrWhiteSpace(item.NazivRM) ? item.NazivZanimanja : item.NazivRM)</td>
-                                <td>@(item.Koef1?.ToString("N4") ?? "-")</td>
-                                <td>@(item.ProcRVr?.ToString("N2") ?? "-")</td>
-                                <td>@(item.DatumPrestankaRO?.ToString("dd.MM.yyyy") ?? "-")</td>
-                                <td>
-                                    <span class="badge bg-warning text-dark">@item.RazlogNeslaganja</span>
-                                </td>
                             </tr>
                         }
                     }
                     else
                     {
                         <tr>
-                            <td colspan="8" class="text-center text-success fw-semibold py-4">
+                            <td colspan="4" class="text-center text-success fw-semibold py-4">
                                 ✅ Сви радници из РФЗО евиденције за изабране установе су пронађени у ЗУ фајловима!
                             </td>
                         </tr>

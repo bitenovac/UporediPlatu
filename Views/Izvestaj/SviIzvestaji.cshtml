@@ -3,7 +3,46 @@
     ViewData["Title"] = "Обједињени приказ извештаја";
     bool imaPrvi = Model.IzabraniIzvestaji.Contains("NepronadjeniURfzo");
     bool imaDrugi = Model.IzabraniIzvestaji.Contains("NepronadjeniUZu");
+
+    int brojPrvi = Model.NepronadjeniURfzo?.Count ?? 0;
+    int brojDrugi = Model.NepronadjeniUZu?.Count ?? 0;
 }
+
+<style>
+    /* Таб који има резултате - неактивно стање (светлоплава РФЗО) */
+    #izvestajiTab .nav-link.tab-sa-rezultatima {
+        background-color: #e6f2fa;
+        color: #003b73;
+        border-color: #b8daff #b8daff #dee2e6;
+        margin-right: 4px;
+        transition: all 0.15s ease-in-out;
+    }
+
+    #izvestajiTab .nav-link.tab-sa-rezultatima:hover {
+        background-color: #d0e7f7;
+        color: #00264d;
+    }
+
+    /* Таб који има резултате - активно стање (тамноплава РФЗО) */
+    #izvestajiTab .nav-link.tab-sa-rezultatima.active {
+        background-color: #003b73 !important;
+        color: #ffffff !important;
+        border-color: #003b73 #003b73 #003b73 !important;
+    }
+
+    /* Таб без резултата (0) - задржава стандардну неутралну позадину */
+    #izvestajiTab .nav-link.tab-bez-rezultata {
+        background-color: #f8f9fa;
+        color: #6c757d;
+        margin-right: 4px;
+    }
+
+    #izvestajiTab .nav-link.tab-bez-rezultata.active {
+        background-color: #ffffff !important;
+        color: #495057 !important;
+        border-color: #dee2e6 #dee2e6 #ffffff !important;
+    }
+</style>
 
 <div class="container mt-4 mb-5">
     <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
@@ -19,17 +58,21 @@
     <ul class="nav nav-tabs mb-3 fw-semibold" id="izvestajiTab" role="tablist">
         @if (imaPrvi)
         {
+            string klasaPrvi = brojPrvi > 0 ? "tab-sa-rezultatima" : "tab-bez-rezultata";
             <li class="nav-item" role="presentation">
-                <button class="nav-link active" id="tab1-btn" data-bs-toggle="tab" data-bs-target="#tab1" type="button" role="tab">
-                    1. У ЗУ, нису у РФЗО <span class="badge bg-primary ms-1">@(Model.NepronadjeniURfzo?.Count ?? 0)</span>
+                <button class="nav-link active @klasaPrvi d-flex align-items-center text-start lh-sm py-2" id="tab1-btn" data-bs-toggle="tab" data-bs-target="#tab1" type="button" role="tab">
+                    <span>1. На списку ЗУ,<br />а нису у РФЗО</span>
+                    <span class="badge @(brojPrvi > 0 ? "bg-primary" : "bg-secondary") ms-2">@brojPrvi</span>
                 </button>
             </li>
         }
         @if (imaDrugi)
         {
+            string klasaDrugi = brojDrugi > 0 ? "tab-sa-rezultatima" : "tab-bez-rezultata";
             <li class="nav-item" role="presentation">
-                <button class="nav-link @(!imaPrvi ? "active" : "")" id="tab2-btn" data-bs-toggle="tab" data-bs-target="#tab2" type="button" role="tab">
-                    2. У РФЗО, нису у ЗУ <span class="badge bg-primary ms-1">@(Model.NepronadjeniUZu?.Count ?? 0)</span>
+                <button class="nav-link @(!imaPrvi ? "active" : "") @klasaDrugi d-flex align-items-center text-start lh-sm py-2" id="tab2-btn" data-bs-toggle="tab" data-bs-target="#tab2" type="button" role="tab">
+                    <span>2. На списку РФЗО,<br />а нису у ЗУ</span>
+                    <span class="badge @(brojDrugi > 0 ? "bg-primary" : "bg-secondary") ms-2">@brojDrugi</span>
                 </button>
             </li>
         }
