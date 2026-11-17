@@ -17,27 +17,36 @@ namespace UporediPlate.Controllers
         private readonly UvozZuServis _uvozZuServis;
         private readonly IzvestajNepronadjeniURfzoServis _nepronadjeniURfzoServis;
         private readonly IzvestajNepronadjeniUZuServis _nepronadjeniUZuServis;
+        private readonly IzvestajNeslaganjeKoeficijenataServis _neslaganjeKoefServis;
         private readonly ExcelNepronadjeniURfzoServis _excelNepronadjeniURfzo;
         private readonly ExcelNepronadjeniUZuServis _excelNepronadjeniUZu;
+        private readonly ExcelNeslaganjeKoeficijenataServis _excelNeslaganjeKoef;
         private readonly PdfNepronadjeniURfzoServis _pdfNepronadjeniURfzo;
         private readonly PdfNepronadjeniUZuServis _pdfNepronadjeniUZu;
+        private readonly PdfNeslaganjeKoeficijenataServis _pdfNeslaganjeKoef;
 
         public IzvestajController(
             UvozZuServis uvozZuServis,
             IzvestajNepronadjeniURfzoServis nepronadjeniURfzoServis,
             IzvestajNepronadjeniUZuServis nepronadjeniUZuServis,
+            IzvestajNeslaganjeKoeficijenataServis neslaganjeKoefServis,
             ExcelNepronadjeniURfzoServis excelNepronadjeniURfzo,
             ExcelNepronadjeniUZuServis excelNepronadjeniUZu,
+            ExcelNeslaganjeKoeficijenataServis excelNeslaganjeKoef,
             PdfNepronadjeniURfzoServis pdfNepronadjeniURfzo,
-            PdfNepronadjeniUZuServis pdfNepronadjeniUZu)
+            PdfNepronadjeniUZuServis pdfNepronadjeniUZu,
+            PdfNeslaganjeKoeficijenataServis pdfNeslaganjeKoef)
         {
             _uvozZuServis = uvozZuServis;
             _nepronadjeniURfzoServis = nepronadjeniURfzoServis;
             _nepronadjeniUZuServis = nepronadjeniUZuServis;
+            _neslaganjeKoefServis = neslaganjeKoefServis;
             _excelNepronadjeniURfzo = excelNepronadjeniURfzo;
             _excelNepronadjeniUZu = excelNepronadjeniUZu;
+            _excelNeslaganjeKoef = excelNeslaganjeKoef;
             _pdfNepronadjeniURfzo = pdfNepronadjeniURfzo;
             _pdfNepronadjeniUZu = pdfNepronadjeniUZu;
+            _pdfNeslaganjeKoef = pdfNeslaganjeKoef;
         }
 
         [HttpGet]
@@ -83,21 +92,24 @@ namespace UporediPlate.Controllers
 
             ViewBag.IzabraniKljucevi = string.Join(",", izabraniKljucevi);
 
-            // Случај 1: Изабран само 1. извештај (У ЗУ, а нису у РФЗО)
             if (izabraniIzvestaji.Count == 1 && izabraniIzvestaji.Contains("NepronadjeniURfzo"))
             {
                 var nepronadjeni = await _nepronadjeniURfzoServis.GenerisiAsync(izabraniKljucevi);
                 return View("IzvestajNepronadjeni", nepronadjeni);
             }
 
-            // Случај 2: Изабран само 2. извештај (У РФЗО, а нису у ЗУ)
             if (izabraniIzvestaji.Count == 1 && izabraniIzvestaji.Contains("NepronadjeniUZu"))
             {
                 var nepronadjeniUZu = await _nepronadjeniUZuServis.GenerisiAsync(izabraniKljucevi);
                 return View("IzvestajNepronadjeniUZu", nepronadjeniUZu);
             }
 
-            // Случај 3: Изабрано више извештаја (или сви)
+            if (izabraniIzvestaji.Count == 1 && izabraniIzvestaji.Contains("NeslaganjeKoeficijenata"))
+            {
+                var neslaganjeKoef = await _neslaganjeKoefServis.GenerisiAsync(izabraniKljucevi);
+                return View("IzvestajNeslaganjeKoeficijenata", neslaganjeKoef);
+            }
+
             var objedinjeniModel = new SviIzvestajiViewModel
             {
                 IzabraniIzvestaji = izabraniIzvestaji,
@@ -112,6 +124,11 @@ namespace UporediPlate.Controllers
             if (izabraniIzvestaji.Contains("NepronadjeniUZu"))
             {
                 objedinjeniModel.NepronadjeniUZu = await _nepronadjeniUZuServis.GenerisiAsync(izabraniKljucevi);
+            }
+
+            if (izabraniIzvestaji.Contains("NeslaganjeKoeficijenata"))
+            {
+                objedinjeniModel.NeslaganjeKoeficijenata = await _neslaganjeKoefServis.GenerisiAsync(izabraniKljucevi);
             }
 
             return View("SviIzvestaji", objedinjeniModel);
@@ -176,6 +193,35 @@ namespace UporediPlate.Controllers
                 return RedirectToAction(nameof(Index));
 
             var (sadrzaj, contentType, nazivFajla) = _pdfNepronadjeniUZu.Generisi(podaci);
+            return File(sadrzaj, contentType, nazivFajla);
+        }
+
+        // ИЗВОЗ ЗА ИЗВЕШТАЈ 3 (Неслагање у коефицијентима)
+        [HttpPost]
+        public async Task<IActionResult> IzvozUExcelNeslaganjeKoeficijenata(string izabraniKljuceviStr)
+        {
+            if (string.IsNullOrWhiteSpace(izabraniKljuceviStr))
+                return RedirectToAction(nameof(Index));
+
+            var kljucevi = izabraniKljuceviStr.Split(',', StringSplitOptions.RemoveEmptyEntries).ToList();
+            var podaci = await _neslaganjeKoefServis.GenerisiAsync(kljucevi);
+
+            byte[] content = _excelNeslaganjeKoef.Generisi(podaci);
+            string nazivFajla = $"Izvestaj_Neslaganje_Koeficijenata_{DateTime.Now:yyyyMMdd_HHmm}.xlsx";
+            return File(content, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", nazivFajla);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> IzvozUPdfNeslaganjeKoeficijenata(string izabraniKljuceviStr)
+        {
+            if (string.IsNullOrWhiteSpace(izabraniKljuceviStr))
+                return RedirectToAction(nameof(Index));
+
+            var kljucevi = izabraniKljuceviStr.Split(',', StringSplitOptions.RemoveEmptyEntries).ToList();
+            var podaci = await _neslaganjeKoefServis.GenerisiAsync(kljucevi);
+            if (podaci.Count == 0)
+                return RedirectToAction(nameof(Index));
+            var (sadrzaj, contentType, nazivFajla) = _pdfNeslaganjeKoef.Generisi(podaci);
             return File(sadrzaj, contentType, nazivFajla);
         }
     }

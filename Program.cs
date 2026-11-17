@@ -24,16 +24,19 @@ builder.Services.AddScoped<UvozZuServis>();
 builder.Services.AddScoped<IzvestajPomocnik>();
 builder.Services.AddScoped<IzvestajNepronadjeniURfzoServis>();
 builder.Services.AddScoped<IzvestajNepronadjeniUZuServis>();
+builder.Services.AddScoped<IzvestajNeslaganjeKoeficijenataServis>();
 
 // 6. Регистрација сервиса за извоз извештаја у Excel
 builder.Services.AddScoped<ExcelPomocnik>();
 builder.Services.AddScoped<ExcelNepronadjeniURfzoServis>();
 builder.Services.AddScoped<ExcelNepronadjeniUZuServis>();
+builder.Services.AddScoped<ExcelNeslaganjeKoeficijenataServis>();
 
 // 7. Регистрација сервиса за извоз извештаја у PDF / ZIP
 builder.Services.AddScoped<PdfPomocnik>();
 builder.Services.AddScoped<PdfNepronadjeniURfzoServis>();
 builder.Services.AddScoped<PdfNepronadjeniUZuServis>();
+builder.Services.AddScoped<PdfNeslaganjeKoeficijenataServis>();
 
 // Додавање подршке за MVC контролере и погледе
 builder.Services.AddControllersWithViews();

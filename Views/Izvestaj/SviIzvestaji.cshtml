@@ -3,13 +3,16 @@
     ViewData["Title"] = "Обједињени приказ извештаја";
     bool imaPrvi = Model.IzabraniIzvestaji.Contains("NepronadjeniURfzo");
     bool imaDrugi = Model.IzabraniIzvestaji.Contains("NepronadjeniUZu");
+    bool imaTreci = Model.IzabraniIzvestaji.Contains("NeslaganjeKoeficijenata");
 
     int brojPrvi = Model.NepronadjeniURfzo?.Count ?? 0;
     int brojDrugi = Model.NepronadjeniUZu?.Count ?? 0;
+    int brojTreci = Model.NeslaganjeKoeficijenata?.Count ?? 0;
+
+    string prviAktivan = imaPrvi ? "tab1" : (imaDrugi ? "tab2" : "tab3");
 }
 
 <style>
-    /* Таб који има резултате - неактивно стање (светлоплава РФЗО) */
     #izvestajiTab .nav-link.tab-sa-rezultatima {
         background-color: #e6f2fa;
         color: #003b73;
@@ -23,14 +26,12 @@
         color: #00264d;
     }
 
-    /* Таб који има резултате - активно стање (тамноплава РФЗО) */
     #izvestajiTab .nav-link.tab-sa-rezultatima.active {
         background-color: #003b73 !important;
         color: #ffffff !important;
         border-color: #003b73 #003b73 #003b73 !important;
     }
 
-    /* Таб без резултата (0) - задржава стандардну неутралну позадину */
     #izvestajiTab .nav-link.tab-bez-rezultata {
         background-color: #f8f9fa;
         color: #6c757d;
@@ -60,7 +61,7 @@
         {
             string klasaPrvi = brojPrvi > 0 ? "tab-sa-rezultatima" : "tab-bez-rezultata";
             <li class="nav-item" role="presentation">
-                <button class="nav-link active @klasaPrvi d-flex align-items-center text-start lh-sm py-2" id="tab1-btn" data-bs-toggle="tab" data-bs-target="#tab1" type="button" role="tab">
+                <button class="nav-link @(prviAktivan == "tab1" ? "active" : "") @klasaPrvi d-flex align-items-center text-start lh-sm py-2" id="tab1-btn" data-bs-toggle="tab" data-bs-target="#tab1" type="button" role="tab">
                     <span>1. На списку ЗУ,<br />а нису у РФЗО</span>
                     <span class="badge @(brojPrvi > 0 ? "bg-primary" : "bg-secondary") ms-2">@brojPrvi</span>
                 </button>
@@ -70,9 +71,19 @@
         {
             string klasaDrugi = brojDrugi > 0 ? "tab-sa-rezultatima" : "tab-bez-rezultata";
             <li class="nav-item" role="presentation">
-                <button class="nav-link @(!imaPrvi ? "active" : "") @klasaDrugi d-flex align-items-center text-start lh-sm py-2" id="tab2-btn" data-bs-toggle="tab" data-bs-target="#tab2" type="button" role="tab">
+                <button class="nav-link @(prviAktivan == "tab2" ? "active" : "") @klasaDrugi d-flex align-items-center text-start lh-sm py-2" id="tab2-btn" data-bs-toggle="tab" data-bs-target="#tab2" type="button" role="tab">
                     <span>2. На списку РФЗО,<br />а нису у ЗУ</span>
                     <span class="badge @(brojDrugi > 0 ? "bg-primary" : "bg-secondary") ms-2">@brojDrugi</span>
+                </button>
+            </li>
+        }
+        @if (imaTreci)
+        {
+            string klasaTreci = brojTreci > 0 ? "tab-sa-rezultatima" : "tab-bez-rezultata";
+            <li class="nav-item" role="presentation">
+                <button class="nav-link @(prviAktivan == "tab3" ? "active" : "") @klasaTreci d-flex align-items-center text-start lh-sm py-2" id="tab3-btn" data-bs-toggle="tab" data-bs-target="#tab3" type="button" role="tab">
+                    <span>3. Неслагање у<br />коефицијентима</span>
+                    <span class="badge @(brojTreci > 0 ? "bg-primary" : "bg-secondary") ms-2">@brojTreci</span>
                 </button>
             </li>
         }
@@ -82,15 +93,22 @@
         @if (imaPrvi)
         {
             ViewBag.IzabraniKljucevi = Model.IzabraniKljuceviStr;
-            <div class="tab-pane fade show active" id="tab1" role="tabpanel">
+            <div class="tab-pane fade @(prviAktivan == "tab1" ? "show active" : "")" id="tab1" role="tabpanel">
                 <partial name="IzvestajNepronadjeni" model="Model.NepronadjeniURfzo" />
             </div>
         }
         @if (imaDrugi)
         {
             ViewBag.IzabraniKljucevi = Model.IzabraniKljuceviStr;
-            <div class="tab-pane fade @(!imaPrvi ? "show active" : "")" id="tab2" role="tabpanel">
+            <div class="tab-pane fade @(prviAktivan == "tab2" ? "show active" : "")" id="tab2" role="tabpanel">
                 <partial name="IzvestajNepronadjeniUZu" model="Model.NepronadjeniUZu" />
+            </div>
+        }
+        @if (imaTreci)
+        {
+            ViewBag.IzabraniKljucevi = Model.IzabraniKljuceviStr;
+            <div class="tab-pane fade @(prviAktivan == "tab3" ? "show active" : "")" id="tab3" role="tabpanel">
+                <partial name="IzvestajNeslaganjeKoeficijenata" model="Model.NeslaganjeKoeficijenata" />
             </div>
         }
     </div>

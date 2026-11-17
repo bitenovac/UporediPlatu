@@ -1,0 +1,219 @@
+@model List<UporediPlate.Models.IzvestajNeslaganjeKoeficijenataViewModel>
+@{
+    ViewData["Title"] = "Неслагање у основним и укупним коефицијентима (РФЗО и ЗУ)";
+    var sortiraniModel = Model?
+        .OrderBy(x => x.SifraZuNormalizovana)
+        .ThenBy(x => x.Prezime)
+        .ThenBy(x => x.Ime)
+        .ToList();
+
+    var prvaStavka = sortiraniModel?.FirstOrDefault();
+    int brojZaPrvuUstanovu = prvaStavka != null
+        ? sortiraniModel!.Count(x => x.SifraZuNormalizovana == prvaStavka.SifraZuNormalizovana)
+        : 0;
+}
+
+<style>
+    .rfzo-tabela-zaglavlje th {
+        background-color: #003b73 !important;
+        color: #ffffff !important;
+        border-bottom: 2px solid #00264d !important;
+        font-weight: 600;
+        vertical-align: middle !important;
+    }
+
+    .zu-naslovna-linija {
+        background-color: #198754 !important;
+        color: #ffffff !important;
+        border-bottom: 2px solid #146c43 !important;
+        font-weight: 700;
+        font-size: 0.86rem;
+        letter-spacing: 0.2px;
+    }
+
+    .zu-naslovna-linija td {
+        background-color: #198754 !important;
+        color: #ffffff !important;
+        border-top: 2px solid #146c43 !important;
+        border-bottom: 2px solid #146c43 !important;
+        font-weight: 700;
+        font-size: 0.86rem;
+        letter-spacing: 0.2px;
+    }
+
+    .status-zuta-linija {
+        background-color: #ffc107 !important;
+        color: #212529 !important;
+        border-bottom: 2px solid #e0a800 !important;
+        font-weight: 600;
+        font-size: 0.84rem;
+    }
+
+    .kolona-radno-mesto {
+        max-width: 260px;
+        white-space: normal;
+        word-break: break-word;
+        line-height: 1.25;
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    .btn-nazad-zuto {
+        background-color: #ffc107;
+        border: 2px solid #e0a800;
+        color: #212529;
+        font-weight: 600;
+    }
+
+    .btn-nazad-zuto:hover {
+        background-color: #ffca2c;
+        border-color: #d39e00;
+        color: #000000;
+    }
+
+    @@media print {
+        header,
+        footer,
+        .no-print {
+            display: none !important;
+        }
+
+        .container {
+            max-width: 100% !important;
+            width: 100% !important;
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+
+        body {
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+        }
+    }
+</style>
+
+<div class="container mt-4 mb-5">
+    <div class="d-flex flex-wrap justify-content-between align-items-end gap-2 mb-3">
+        <div>
+            <h2 class="fw-bold h3 mb-1" style="color: #003b73;">
+                Неслагање у основним и укупним коефицијентима (РФЗО и ЗУ)
+            </h2>
+            <p class="text-muted small mb-0">
+                Поређење основног коефицијента и збира коефицијената из РФЗО евиденције са подацима достављеним у ЗУ фајлу.
+            </p>
+        </div>
+
+        <div class="d-flex align-items-center justify-content-end gap-2 ms-auto no-print">
+            <a asp-controller="Izvestaj" asp-action="Index" class="btn btn-nazad-zuto btn-sm px-3 shadow-sm">
+                ← Назад на избор фајлова
+            </a>
+
+            <form asp-controller="Izvestaj" asp-action="IzvozUExcelNeslaganjeKoeficijenata" method="post" class="m-0">
+                <input type="hidden" name="izabraniKljuceviStr" value="@ViewBag.IzabraniKljucevi" />
+                <button type="submit" class="btn btn-success btn-sm px-3 fw-semibold shadow-sm" @(sortiraniModel == null || sortiraniModel.Count == 0 ? "disabled" : "")>
+                    Извоз у Excel
+                </button>
+            </form>
+
+            <form asp-controller="Izvestaj" asp-action="IzvozUPdfNeslaganjeKoeficijenata" method="post" class="m-0">
+                <input type="hidden" name="izabraniKljuceviStr" value="@ViewBag.IzabraniKljucevi" />
+                <button type="submit" class="btn btn-danger btn-sm px-3 fw-semibold shadow-sm" @(sortiraniModel == null || sortiraniModel.Count == 0 ? "disabled" : "")>
+                    Извоз у PDF
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <div class="card shadow-sm border-0 rounded-3 overflow-hidden">
+        @if (prvaStavka != null)
+        {
+            <div class="zu-naslovna-linija py-2 px-3 d-flex flex-wrap justify-content-between align-items-center gap-2">
+                <span>
+                    Шифра ЗУ: @prvaStavka.SifraZuOriginal (@prvaStavka.SifraZuNormalizovana) &nbsp;|&nbsp; Назив ЗУ: @prvaStavka.NazivZu
+                </span>
+                <div class="d-flex align-items-center gap-2">
+                    <span class="badge bg-light text-dark">Број радника: @brojZaPrvuUstanovu</span>
+                    @if (sortiraniModel!.Count > brojZaPrvuUstanovu)
+                    {
+                        <span class="badge bg-dark text-white">Укупно радника: @sortiraniModel.Count</span>
+                    }
+                </div>
+            </div>
+        }
+
+        <div class="status-zuta-linija py-2 px-3">
+            Утврђена је разлика у основном или укупном коефицијенту између РФЗО и ЗУ евиденције
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-hover table-striped align-middle mb-0" style="font-size: 0.82rem;">
+                <thead class="rfzo-tabela-zaglavlje">
+                    <tr>
+                        <th class="text-center">Период</th>
+                        <th class="text-center">ЈМБГ</th>
+                        <th>Име</th>
+                        <th>Презиме</th>
+                        <th>Назив радног места (РФЗО)</th>
+                        <th class="text-end">Осн. коэф.<br />(РФЗО)</th>
+                        <th class="text-end">Осн. коэф.<br />(ЗУ)</th>
+                        <th class="text-end">Укуп. коэф.<br />(РФЗО)</th>
+                        <th class="text-end">Укуп. коэф.<br />(ЗУ)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (sortiraniModel != null && sortiraniModel.Count > 0)
+                    {
+                        string trenutnaSifraZu = prvaStavka!.SifraZuNormalizovana;
+
+                        foreach (var item in sortiraniModel)
+                        {
+                            if (item.SifraZuNormalizovana != trenutnaSifraZu)
+                            {
+                                trenutnaSifraZu = item.SifraZuNormalizovana;
+                                int brojZaUstanovu = sortiraniModel.Count(x => x.SifraZuNormalizovana == trenutnaSifraZu);
+
+                                <tr class="zu-naslovna-linija">
+                                    <td colspan="9" class="py-2 px-3">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <span>
+                                                Шифра ЗУ: @item.SifraZuOriginal (@item.SifraZuNormalizovana) &nbsp;|&nbsp; Назив ЗУ: @item.NazivZu
+                                            </span>
+                                            <span class="badge bg-light text-dark">Број радника: @brojZaUstanovu</span>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+
+                            bool razlikaOsnovni = Math.Abs(item.OsnovniKoefRfzo - item.OsnovniKoefZu) >= 0.0001m;
+                            bool razlikaUkupni = Math.Abs(item.UkupniKoefRfzo - item.UkupniKoefZu) >= 0.0001m;
+
+                            <tr>
+                                <td class="text-center">@item.PeriodUvoza.ToString("MM.yyyy")</td>
+                                <td class="text-center font-monospace">@item.Jmbg</td>
+                                <td>@item.Ime</td>
+                                <td class="fw-semibold">@item.Prezime</td>
+                                <td>
+                                    <div class="kolona-radno-mesto" title="@item.NazivRM">@item.NazivRM</div>
+                                </td>
+                                <td class="text-end @(razlikaOsnovni ? "fw-bold text-danger" : "")">@item.OsnovniKoefRfzo.ToString("N4")</td>
+                                <td class="text-end @(razlikaOsnovni ? "fw-bold text-danger" : "")">@item.OsnovniKoefZu.ToString("N4")</td>
+                                <td class="text-end @(razlikaUkupni ? "fw-bold text-danger" : "")">@item.UkupniKoefRfzo.ToString("N4")</td>
+                                <td class="text-end @(razlikaUkupni ? "fw-bold text-danger" : "")">@item.UkupniKoefZu.ToString("N4")</td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="9" class="text-center text-success fw-semibold py-4">
+                                ✅ Сви радници који се налазе у обе евиденције имају усклађене основне и укупне коефицијенте!
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
