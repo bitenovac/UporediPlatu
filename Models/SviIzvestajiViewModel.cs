@@ -10,5 +10,6 @@ namespace UporediPlate.Models
         public List<IzvestajNepronadjeniViewModel>? NepronadjeniURfzo { get; set; }
         public List<IzvestajNepronadjeniUZuViewModel>? NepronadjeniUZu { get; set; }
         public List<IzvestajNeslaganjeKoeficijenataViewModel>? NeslaganjeKoeficijenata { get; set; }
+        public List<IzvestajPrekovremeniSatiViewModel>? PrekovremeniSati { get; set; }
     }
 }

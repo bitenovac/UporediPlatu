@@ -241,3 +241,4 @@ D:\Projekti\UporediPlatu\bin\Debug\net10.0\ICSharpCode.SharpZipLib.dll
 D:\Projekti\UporediPlatu\bin\Debug\net10.0\SixLabors.ImageSharp.dll
 D:\Projekti\UporediPlatu\bin\Debug\net10.0\de\PdfSharpCore.resources.dll
 D:\Projekti\UporediPlatu\obj\Debug\net10.0\compressed\u5pthnl8ag-{0}-oahqxnw6q2-oahqxnw6q2.gz
+D:\Projekti\UporediPlatu\obj\Debug\net10.0\compressed\yqt1fjg05i-{0}-sza4l7l6uz-sza4l7l6uz.gz

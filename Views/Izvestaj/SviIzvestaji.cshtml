@@ -4,12 +4,14 @@
     bool imaPrvi = Model.IzabraniIzvestaji.Contains("NepronadjeniURfzo");
     bool imaDrugi = Model.IzabraniIzvestaji.Contains("NepronadjeniUZu");
     bool imaTreci = Model.IzabraniIzvestaji.Contains("NeslaganjeKoeficijenata");
+    bool imaCetvrti = Model.IzabraniIzvestaji.Contains("PrekovremeniSati");
 
     int brojPrvi = Model.NepronadjeniURfzo?.Count ?? 0;
     int brojDrugi = Model.NepronadjeniUZu?.Count ?? 0;
     int brojTreci = Model.NeslaganjeKoeficijenata?.Count ?? 0;
+    int brojCetvrti = Model.PrekovremeniSati?.Count ?? 0;
 
-    string prviAktivan = imaPrvi ? "tab1" : (imaDrugi ? "tab2" : "tab3");
+    string prviAktivan = imaPrvi ? "tab1" : (imaDrugi ? "tab2" : (imaTreci ? "tab3" : "tab4"));
 }
 
 <style>
@@ -87,6 +89,16 @@
                 </button>
             </li>
         }
+        @if (imaCetvrti)
+        {
+            string klasaCetvrti = brojCetvrti > 0 ? "tab-sa-rezultatima" : "tab-bez-rezultata";
+            <li class="nav-item" role="presentation">
+                <button class="nav-link @(prviAktivan == "tab4" ? "active" : "") @klasaCetvrti d-flex align-items-center text-start lh-sm py-2" id="tab4-btn" data-bs-toggle="tab" data-bs-target="#tab4" type="button" role="tab">
+                    <span>4. Прековремени<br />и додатни сати</span>
+                    <span class="badge @(brojCetvrti > 0 ? "bg-primary" : "bg-secondary") ms-2">@brojCetvrti</span>
+                </button>
+            </li>
+        }
     </ul>
 
     <div class="tab-content" id="izvestajiTabContent">
@@ -109,6 +121,13 @@
             ViewBag.IzabraniKljucevi = Model.IzabraniKljuceviStr;
             <div class="tab-pane fade @(prviAktivan == "tab3" ? "show active" : "")" id="tab3" role="tabpanel">
                 <partial name="IzvestajNeslaganjeKoeficijenata" model="Model.NeslaganjeKoeficijenata" />
+            </div>
+        }
+        @if (imaCetvrti)
+        {
+            ViewBag.IzabraniKljucevi = Model.IzabraniKljuceviStr;
+            <div class="tab-pane fade @(prviAktivan == "tab4" ? "show active" : "")" id="tab4" role="tabpanel">
+                <partial name="IzvestajPrekovremeniSati" model="Model.PrekovremeniSati" />
             </div>
         }
     </div>

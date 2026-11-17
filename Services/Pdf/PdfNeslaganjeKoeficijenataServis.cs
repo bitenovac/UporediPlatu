@@ -68,10 +68,10 @@ namespace UporediPlate.Services.Pdf
                     "Име",
                     "Презиме",
                     "Назив радног места (РФЗО)",
-                    "Осн. коэф.\n(РФЗО)",
-                    "Осн. коэф.\n(ЗУ)",
-                    "Укуп. коэф.\n(РФЗО)",
-                    "Укуп. коэф.\n(ЗУ)"
+                    "Осн. коеф.\n(РФЗО)",
+                    "Осн. коеф.\n(ЗУ)",
+                    "Укуп. коеф.\n(РФЗО)",
+                    "Укуп. коеф.\n(ЗУ)"
                 });
 
             foreach (var item in stavke)
@@ -86,10 +86,10 @@ namespace UporediPlate.Services.Pdf
                 row.Cells[2].AddParagraph(item.Ime);
                 row.Cells[3].AddParagraph(item.Prezime).Format.Font.Bold = true;
                 row.Cells[4].AddParagraph(item.NazivRM);
-                row.Cells[5].AddParagraph(item.OsnovniKoefRfzo.ToString("N4")).Format.Alignment = ParagraphAlignment.Right;
-                row.Cells[6].AddParagraph(item.OsnovniKoefZu.ToString("N4")).Format.Alignment = ParagraphAlignment.Right;
-                row.Cells[7].AddParagraph(item.UkupniKoefRfzo.ToString("N4")).Format.Alignment = ParagraphAlignment.Right;
-                row.Cells[8].AddParagraph(item.UkupniKoefZu.ToString("N4")).Format.Alignment = ParagraphAlignment.Right;
+                row.Cells[5].AddParagraph(item.OsnovniKoefRfzo.ToString("N2")).Format.Alignment = ParagraphAlignment.Right;
+                row.Cells[6].AddParagraph(item.OsnovniKoefZu.ToString("N2")).Format.Alignment = ParagraphAlignment.Right;
+                row.Cells[7].AddParagraph(item.UkupniKoefRfzo.ToString("N2")).Format.Alignment = ParagraphAlignment.Right;
+                row.Cells[8].AddParagraph(item.UkupniKoefZu.ToString("N2")).Format.Alignment = ParagraphAlignment.Right;
             }
 
             return _pomocnik.RenderujDokument(doc, section);

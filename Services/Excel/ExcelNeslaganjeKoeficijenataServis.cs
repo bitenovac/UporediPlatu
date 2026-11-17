@@ -65,10 +65,10 @@ namespace UporediPlate.Services.Excel
                     "Име",
                     "Презиме",
                     "Назив радног места (РФЗО)",
-                    "Осн. коэф. (РФЗО)",
-                    "Осн. коэф. (ЗУ)",
-                    "Укуп. коэф. (РФЗО)",
-                    "Укуп. коэф. (ЗУ)"
+                    "Осн. коеф. (РФЗО)",
+                    "Осн. коеф. (ЗУ)",
+                    "Укуп. коеф. (РФЗО)",
+                    "Укуп. коеф. (ЗУ)"
                 };
                 _pomocnik.PrimeniZaglavljeTabele(ws, headerRow, kolone);
 
@@ -91,19 +91,19 @@ namespace UporediPlate.Services.Excel
                     rmCell.Style.Alignment.WrapText = true;
 
                     ws.Cell(trenutniRed, 6).Value = item.OsnovniKoefRfzo;
-                    ws.Cell(trenutniRed, 6).Style.NumberFormat.Format = "#,##0.0000";
+                    ws.Cell(trenutniRed, 6).Style.NumberFormat.Format = "#,##0.00";
                     ws.Cell(trenutniRed, 6).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Right;
 
                     ws.Cell(trenutniRed, 7).Value = item.OsnovniKoefZu;
-                    ws.Cell(trenutniRed, 7).Style.NumberFormat.Format = "#,##0.0000";
+                    ws.Cell(trenutniRed, 7).Style.NumberFormat.Format = "#,##0.00";
                     ws.Cell(trenutniRed, 7).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Right;
 
                     ws.Cell(trenutniRed, 8).Value = item.UkupniKoefRfzo;
-                    ws.Cell(trenutniRed, 8).Style.NumberFormat.Format = "#,##0.0000";
+                    ws.Cell(trenutniRed, 8).Style.NumberFormat.Format = "#,##0.00";
                     ws.Cell(trenutniRed, 8).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Right;
 
                     ws.Cell(trenutniRed, 9).Value = item.UkupniKoefZu;
-                    ws.Cell(trenutniRed, 9).Style.NumberFormat.Format = "#,##0.0000";
+                    ws.Cell(trenutniRed, 9).Style.NumberFormat.Format = "#,##0.00";
                     ws.Cell(trenutniRed, 9).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Right;
 
                     _pomocnik.StilizujRedPodataka(ws, trenutniRed, brojKolona: brojKolona);

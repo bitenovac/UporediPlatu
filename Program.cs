@@ -1,9 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using UporediPlate;
 using UporediPlate.Services;
-using UporediPlate.Services.Izvestaji;
-using UporediPlate.Services.Excel;
-using UporediPlate.Services.Pdf;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -14,29 +11,8 @@ var connectionString = builder.Configuration.GetConnectionString("DefaultConnect
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(connectionString));
 
-// 3. Регистрација сервиса за брзи увоз РФЗО података
-builder.Services.AddScoped<UvozRfzoServis>();
-
-// 4. Регистрација сервиса за брзи увоз података из Здравствених Установа
-builder.Services.AddScoped<UvozZuServis>();
-
-// 5. Регистрација сервиса за генерисање извештаја и поређење података
-builder.Services.AddScoped<IzvestajPomocnik>();
-builder.Services.AddScoped<IzvestajNepronadjeniURfzoServis>();
-builder.Services.AddScoped<IzvestajNepronadjeniUZuServis>();
-builder.Services.AddScoped<IzvestajNeslaganjeKoeficijenataServis>();
-
-// 6. Регистрација сервиса за извоз извештаја у Excel
-builder.Services.AddScoped<ExcelPomocnik>();
-builder.Services.AddScoped<ExcelNepronadjeniURfzoServis>();
-builder.Services.AddScoped<ExcelNepronadjeniUZuServis>();
-builder.Services.AddScoped<ExcelNeslaganjeKoeficijenataServis>();
-
-// 7. Регистрација сервиса за извоз извештаја у PDF / ZIP
-builder.Services.AddScoped<PdfPomocnik>();
-builder.Services.AddScoped<PdfNepronadjeniURfzoServis>();
-builder.Services.AddScoped<PdfNepronadjeniUZuServis>();
-builder.Services.AddScoped<PdfNeslaganjeKoeficijenataServis>();
+// 3. Регистрација свих сервиса апликације (увоз, извештаји, Excel, PDF)
+builder.Services.DodajAplikativneServise();
 
 // Додавање подршке за MVC контролере и погледе
 builder.Services.AddControllersWithViews();
