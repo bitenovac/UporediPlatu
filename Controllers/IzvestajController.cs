@@ -42,6 +42,8 @@ namespace UporediPlate.Controllers
                     "NepronadjeniUZu" => View("IzvestajNepronadjeniUZu", model.NepronadjeniUZu),
                     "NeslaganjeKoeficijenata" => View("IzvestajNeslaganjeKoeficijenata", model.NeslaganjeKoeficijenata),
                     "PrekovremeniSati" => View("IzvestajPrekovremeniSati", model.PrekovremeniSati),
+                    "Preko65Godina" => View("IzvestajPreko65Godina", model.Preko65Godina),
+                    "NepunoRadnoVreme" => View("IzvestajNepunoRadnoVreme", model.NepunoRadnoVreme),
                     _ => RedirectToAction(nameof(Index))
                 };
             }

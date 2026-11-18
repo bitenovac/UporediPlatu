@@ -14,19 +14,25 @@ namespace UporediPlate.Services.Izvestaji
         private readonly IzvestajNepronadjeniUZuServis _nepronadjeniUZuServis;
         private readonly IzvestajNeslaganjeKoeficijenataServis _neslaganjeKoefServis;
         private readonly IzvestajPrekovremeniSatiServis _prekovremeniSatiServis;
+        private readonly IzvestajPreko65GodinaServis _preko65GodinaServis;
+        private readonly IzvestajNepunoRadnoVremeServis _nepunoRadnoVremeServis;
 
         public KoordinatorIzvestajaServis(
             UvozZuServis uvozZuServis,
             IzvestajNepronadjeniURfzoServis nepronadjeniURfzoServis,
             IzvestajNepronadjeniUZuServis nepronadjeniUZuServis,
             IzvestajNeslaganjeKoeficijenataServis neslaganjeKoefServis,
-            IzvestajPrekovremeniSatiServis prekovremeniSatiServis)
+            IzvestajPrekovremeniSatiServis prekovremeniSatiServis,
+            IzvestajPreko65GodinaServis preko65GodinaServis,
+            IzvestajNepunoRadnoVremeServis nepunoRadnoVremeServis)
         {
             _uvozZuServis = uvozZuServis;
             _nepronadjeniURfzoServis = nepronadjeniURfzoServis;
             _nepronadjeniUZuServis = nepronadjeniUZuServis;
             _neslaganjeKoefServis = neslaganjeKoefServis;
             _prekovremeniSatiServis = prekovremeniSatiServis;
+            _preko65GodinaServis = preko65GodinaServis;
+            _nepunoRadnoVremeServis = nepunoRadnoVremeServis;
         }
 
         public List<ZuIstorijaViewModel> VratiSortiranuIstorijuZuFajlova()
@@ -78,6 +84,12 @@ namespace UporediPlate.Services.Izvestaji
 
             if (izabraniIzvestaji.Contains("PrekovremeniSati"))
                 model.PrekovremeniSati = await _prekovremeniSatiServis.GenerisiAsync(izabraniKljucevi);
+
+            if (izabraniIzvestaji.Contains("Preko65Godina"))
+                model.Preko65Godina = await _preko65GodinaServis.GenerisiAsync(izabraniKljucevi);
+
+            if (izabraniIzvestaji.Contains("NepunoRadnoVreme"))
+                model.NepunoRadnoVreme = await _nepunoRadnoVremeServis.GenerisiAsync(izabraniKljucevi);
 
             return model;
         }

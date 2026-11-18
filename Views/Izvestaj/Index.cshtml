@@ -21,7 +21,6 @@
 
     <form asp-controller="Izvestaj" asp-action="GenerisiIzvestaj" method="post">
 
-        <!-- 1. КАРТИЦА: ИЗБОР ВРСТЕ ИЗВЕШТАЈА -->
         <div class="card shadow-sm border-0 rounded-3 overflow-hidden mb-4">
             <div class="card-header text-white py-2 px-3 d-flex justify-content-between align-items-center"
                  style="background-color: #003b73; font-size: 0.9rem;">
@@ -100,11 +99,39 @@
                             </div>
                         </div>
                     </div>
+
+                    <div class="col-md-6">
+                        <div class="border rounded-2 p-3 h-100 report-card" style="cursor: pointer; transition: 0.15s;">
+                            <div class="form-check">
+                                <input class="form-check-input report-checkbox" type="checkbox" name="izabraniIzvestaji"
+                                       value="Preko65Godina" id="rep5" style="cursor: pointer;">
+                                <label class="form-check-label fw-bold text-dark" for="rep5" style="cursor: pointer;">
+                                    5. Запослени старији од 65 година живота (ЗУ)
+                                </label>
+                                <p class="text-muted small mb-0 mt-1">
+                                    Приказује запослене који су стекли 65 година живота. Црвеним словима су истакнути они који у обрачунском месецу пуне 65 година.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="border rounded-2 p-3 h-100 report-card" style="cursor: pointer; transition: 0.15s;">
+                            <div class="form-check">
+                                <input class="form-check-input report-checkbox" type="checkbox" name="izabraniIzvestaji"
+                                       value="NepunoRadnoVreme" id="rep6" style="cursor: pointer;">
+                                <label class="form-check-label fw-bold text-dark" for="rep6" style="cursor: pointer;">
+                                    6. Контрола запослених са непуним радним временом (РФЗО vs ЗУ)
+                                </label>
+                                <p class="text-muted small mb-0 mt-1">
+                                    Приказује запослене са процентом радног времена мањим од 100% у РФЗО бази и пореди са обрачунатим сатима у ЗУ.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
-
-        <!-- 2. КАРТИЦА: ИЗБОР УЧИТАНИХ ЗУ ФАЈЛОВА -->
         <div class="card shadow-sm border-0 rounded-3 overflow-hidden">
             <div class="card-header text-white py-2 px-3 d-flex justify-content-between align-items-center"
                  style="background-color: #455a64; font-size: 0.9rem;">

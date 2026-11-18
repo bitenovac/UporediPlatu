@@ -51,8 +51,16 @@ build_metadata.AdditionalFiles.CssScope =
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcSXp2ZXN0YWpcSXp2ZXN0YWpOZXByb25hZGplbmlVWnUuY3NodG1s
 build_metadata.AdditionalFiles.CssScope = 
 
+[D:/Projekti/UporediPlatu/Views/Izvestaj/IzvestajNepunoRadnoVreme.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcSXp2ZXN0YWpcSXp2ZXN0YWpOZXB1bm9SYWRub1ZyZW1lLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
 [D:/Projekti/UporediPlatu/Views/Izvestaj/IzvestajNeslaganjeKoeficijenata.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcSXp2ZXN0YWpcSXp2ZXN0YWpOZXNsYWdhbmplS29lZmljaWplbmF0YS5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/Projekti/UporediPlatu/Views/Izvestaj/IzvestajPreko65Godina.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcSXp2ZXN0YWpcSXp2ZXN0YWpQcmVrbzY1R29kaW5hLmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 
 
 [D:/Projekti/UporediPlatu/Views/Izvestaj/IzvestajPrekovremeniSati.cshtml]

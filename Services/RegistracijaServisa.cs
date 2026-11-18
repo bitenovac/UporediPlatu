@@ -20,6 +20,8 @@ namespace UporediPlate.Services
             services.AddScoped<IzvestajNepronadjeniUZuServis>();
             services.AddScoped<IzvestajNeslaganjeKoeficijenataServis>();
             services.AddScoped<IzvestajPrekovremeniSatiServis>();
+            services.AddScoped<IzvestajPreko65GodinaServis>();
+            services.AddScoped<IzvestajNepunoRadnoVremeServis>();
 
             // Сервиси за извоз извештаја у Excel
             services.AddScoped<ExcelPomocnik>();
@@ -27,6 +29,8 @@ namespace UporediPlate.Services
             services.AddScoped<ExcelNepronadjeniUZuServis>();
             services.AddScoped<ExcelNeslaganjeKoeficijenataServis>();
             services.AddScoped<ExcelPrekovremeniSatiServis>();
+            services.AddScoped<ExcelPreko65GodinaServis>();
+            services.AddScoped<ExcelNepunoRadnoVremeServis>();
 
             // Сервиси за извоз извештаја у PDF / ZIP
             services.AddScoped<PdfPomocnik>();
@@ -34,6 +38,8 @@ namespace UporediPlate.Services
             services.AddScoped<PdfNepronadjeniUZuServis>();
             services.AddScoped<PdfNeslaganjeKoeficijenataServis>();
             services.AddScoped<PdfPrekovremeniSatiServis>();
+            services.AddScoped<PdfPreko65GodinaServis>();
+            services.AddScoped<PdfNepunoRadnoVremeServis>();
 
             return services;
         }

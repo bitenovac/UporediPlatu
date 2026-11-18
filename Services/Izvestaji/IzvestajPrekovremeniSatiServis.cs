@@ -21,29 +21,25 @@ namespace UporediPlate.Services.Izvestaji
 
             foreach (var zu in zuZapisi)
             {
-                decimal ukupnoDodatnihSati =
-                    zu.PrekovremeniSati +
-                    zu.DezurstvoSati +
-                    zu.PoPozivuSati +
-                    zu.PripravnostSati;
+                decimal ukupnoDodatnih = zu.PrekovremeniSati + zu.DezurstvoSati + zu.PoPozivuSati + zu.PripravnostSati;
 
-                if (ukupnoDodatnihSati > 0)
+                if (ukupnoDodatnih > 0)
                 {
                     rezultat.Add(new IzvestajPrekovremeniSatiViewModel
                     {
-                        SifraZuOriginal = zu.SifraZu,
+                        SifraZuOriginal = zu.SifraZu ?? string.Empty,
                         SifraZuNormalizovana = _pomocnik.NormalizujSifruZu(zu.SifraZu),
-                        NazivZu = zu.NazivZu,
+                        NazivZu = zu.NazivZu ?? string.Empty,
                         PeriodUvoza = zu.PeriodUvoza,
-                        Jmbg = zu.Jmbg,
-                        Ime = zu.Ime,
-                        Prezime = zu.Prezime,
-                        RadnoMesto = zu.RadnoMesto,
+                        Jmbg = zu.Jmbg ?? string.Empty,
+                        Ime = zu.Ime ?? string.Empty,
+                        Prezime = zu.Prezime ?? string.Empty,
+                        RadnoMesto = zu.RadnoMesto ?? string.Empty,
                         PrekovremeniSati = zu.PrekovremeniSati,
                         DezurstvoSati = zu.DezurstvoSati,
                         PoPozivuSati = zu.PoPozivuSati,
                         PripravnostSati = zu.PripravnostSati,
-                        UkupnoDodatnihSati = ukupnoDodatnihSati,
+                        UkupnoDodatnihSati = ukupnoDodatnih,
                         RadnoVreme = zu.SatiUkupno
                     });
                 }
