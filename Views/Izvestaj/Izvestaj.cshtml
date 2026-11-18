@@ -1,0 +1,117 @@
+@using UporediPlate.Izvestaji.Okvir
+@model PrikazIzvestaja
+@*
+    Заједнички приказ за све извештаје (самостално и као картица у SviIzvestaji).
+    Колоне, текстови и истицање редова долазе из дефиниције извештаја у Izvestaji/.
+*@
+@{
+    ViewData["Title"] = Model.NaslovStranice;
+    var prvaGrupa = Model.Grupe.FirstOrDefault();
+    var brojKolona = Model.Kolone.Count;
+    var nemaPodataka = Model.Ukupno == 0;
+}
+
+<div class="container mt-4 mb-5">
+    <div class="d-flex flex-wrap justify-content-between align-items-end gap-2 mb-3">
+        <div>
+            <h2 class="fw-bold h3 mb-1" style="color: #003b73;">@Model.Naslov</h2>
+            <p class="text-muted small mb-0">@Model.Opis</p>
+        </div>
+
+        <div class="d-flex align-items-center justify-content-end gap-2 ms-auto no-print">
+            <a asp-controller="Izvestaj" asp-action="Index" class="btn btn-nazad-zuto btn-sm px-3 shadow-sm">
+                ← Назад на избор фајлова
+            </a>
+
+            <form asp-controller="IzvozIzvestaja" asp-action="Izvoz" asp-route-izvestaj="@Model.Kljuc"
+                  asp-route-format="excel" method="post" class="m-0">
+                <input type="hidden" name="izabraniKljuceviStr" value="@Model.IzabraniKljuceviStr"/>
+                <button type="submit" class="btn btn-success btn-sm px-3 fw-semibold shadow-sm" disabled="@nemaPodataka">
+                    Извоз у Excel
+                </button>
+            </form>
+
+            <form asp-controller="IzvozIzvestaja" asp-action="Izvoz" asp-route-izvestaj="@Model.Kljuc"
+                  asp-route-format="pdf" method="post" class="m-0">
+                <input type="hidden" name="izabraniKljuceviStr" value="@Model.IzabraniKljuceviStr"/>
+                <button type="submit" class="btn btn-danger btn-sm px-3 fw-semibold shadow-sm" disabled="@nemaPodataka">
+                    Извоз у PDF
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <div class="card shadow-sm border-0 rounded-3 overflow-hidden">
+        @if (prvaGrupa != null)
+        {
+            <div class="zu-naslovna-linija py-2 px-3 d-flex flex-wrap justify-content-between align-items-center gap-2">
+                <span>Шифра ЗУ: @prvaGrupa.SifraZaNaslov &nbsp;|&nbsp; Назив ЗУ: @prvaGrupa.NazivZu</span>
+                <div class="d-flex align-items-center gap-2">
+                    <span class="badge bg-light text-dark">Број радника: @prvaGrupa.Redovi.Count</span>
+                    @if (Model.Ukupno > prvaGrupa.Redovi.Count)
+                    {
+                        <span class="badge bg-dark text-white">Укупно радника: @Model.Ukupno</span>
+                    }
+                </div>
+            </div>
+        }
+
+        <div class="status-zuta-linija py-2 px-3">@Model.Napomena</div>
+
+        <div class="table-responsive">
+            <table class="table table-hover table-striped align-middle mb-0" style="font-size: 0.82rem;">
+                <thead class="rfzo-tabela-zaglavlje">
+                <tr>
+                    @foreach (var kolona in Model.Kolone)
+                    {
+                        <th class="@kolona.Klasa">@Html.Raw(kolona.Zaglavlje)</th>
+                    }
+                </tr>
+                </thead>
+                <tbody>
+                @foreach (var grupa in Model.Grupe)
+                {
+                    if (grupa != prvaGrupa)
+                    {
+                        <tr class="zu-naslovna-linija">
+                            <td colspan="@brojKolona" class="py-2 px-3">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span>Шифра ЗУ: @grupa.SifraZaNaslov &nbsp;|&nbsp; Назив ЗУ: @grupa.NazivZu</span>
+                                    <span class="badge bg-light text-dark">Број радника: @grupa.Redovi.Count</span>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+
+                    foreach (var red in grupa.Redovi)
+                    {
+                        <tr>
+                            @foreach (var celija in red.Celije)
+                            {
+                                if (celija.RadnoMesto)
+                                {
+                                    <td style="@red.Stil">
+                                        <div class="kolona-radno-mesto" title="@celija.Tekst" style="@red.Stil">@celija.Tekst</div>
+                                    </td>
+                                }
+                                else
+                                {
+                                    <td class="@celija.Klasa" style="@red.Stil">@celija.Tekst</td>
+                                }
+                            }
+                        </tr>
+                    }
+                }
+                @if (nemaPodataka)
+                {
+                    <tr>
+                        <td colspan="@brojKolona" class="text-center text-success fw-semibold py-4">
+                            @Model.PorukaBezRezultata
+                        </td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

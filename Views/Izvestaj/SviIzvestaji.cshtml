@@ -1,21 +1,8 @@
-@model SviIzvestajiViewModel
+@using UporediPlate.Izvestaji.Okvir
+@model ObjedinjeniPrikaz
 @{
     ViewData["Title"] = "Обједињени приказ извештаја";
-    var imaPrvi = Model.IzabraniIzvestaji.Contains("NepronadjeniURfzo");
-    var imaDrugi = Model.IzabraniIzvestaji.Contains("NepronadjeniUZu");
-    var imaTreci = Model.IzabraniIzvestaji.Contains("NeslaganjeKoeficijenata");
-    var imaCetvrti = Model.IzabraniIzvestaji.Contains("PrekovremeniSati");
-    var imaPeti = Model.IzabraniIzvestaji.Contains("Preko65Godina");
-    var imaSesti = Model.IzabraniIzvestaji.Contains("NepunoRadnoVreme");
-
-    var brojPrvi = Model.NepronadjeniURfzo?.Count ?? 0;
-    var brojDrugi = Model.NepronadjeniUZu?.Count ?? 0;
-    var brojTreci = Model.NeslaganjeKoeficijenata?.Count ?? 0;
-    var brojCetvrti = Model.PrekovremeniSati?.Count ?? 0;
-    var brojPeti = Model.Preko65Godina?.Count ?? 0;
-    var brojSesti = Model.NepunoRadnoVreme?.Count ?? 0;
-
-    var prviAktivan = imaPrvi ? "tab1" : imaDrugi ? "tab2" : imaTreci ? "tab3" : imaCetvrti ? "tab4" : imaPeti ? "tab5" : "tab6";
+    var prviAktivan = Model.Izvestaji.Count > 0 ? Model.Izvestaji[0].RedniBroj : 0;
 }
 
 <style>
@@ -63,120 +50,25 @@
     </div>
 
     <ul class="nav nav-tabs mb-3 fw-semibold" id="izvestajiTab" role="tablist">
-        @if (imaPrvi)
+        @foreach (var (redniBroj, prikaz) in Model.Izvestaji)
         {
-            var klasaPrvi = brojPrvi > 0 ? "tab-sa-rezultatima" : "tab-bez-rezultata";
+            var aktivan = redniBroj == prviAktivan ? "active" : "";
+            var klasa = prikaz.Ukupno > 0 ? "tab-sa-rezultatima" : "tab-bez-rezultata";
             <li class="nav-item" role="presentation">
                 <button
-                    class="nav-link @(prviAktivan == "tab1" ? "active" : "") @klasaPrvi d-flex align-items-center text-start lh-sm py-2"
-                    id="tab1-btn" data-bs-toggle="tab" data-bs-target="#tab1" type="button" role="tab">
-                    <span>1. На списку ЗУ,<br/>а нису у РФЗО</span>
-                    <span class="badge @(brojPrvi > 0 ? "bg-primary" : "bg-secondary") ms-2">@brojPrvi</span>
-                </button>
-            </li>
-        }
-        @if (imaDrugi)
-        {
-            var klasaDrugi = brojDrugi > 0 ? "tab-sa-rezultatima" : "tab-bez-rezultata";
-            <li class="nav-item" role="presentation">
-                <button
-                    class="nav-link @(prviAktivan == "tab2" ? "active" : "") @klasaDrugi d-flex align-items-center text-start lh-sm py-2"
-                    id="tab2-btn" data-bs-toggle="tab" data-bs-target="#tab2" type="button" role="tab">
-                    <span>2. На списку РФЗО,<br/>а нису у ЗУ</span>
-                    <span class="badge @(brojDrugi > 0 ? "bg-primary" : "bg-secondary") ms-2">@brojDrugi</span>
-                </button>
-            </li>
-        }
-        @if (imaTreci)
-        {
-            var klasaTreci = brojTreci > 0 ? "tab-sa-rezultatima" : "tab-bez-rezultata";
-            <li class="nav-item" role="presentation">
-                <button
-                    class="nav-link @(prviAktivan == "tab3" ? "active" : "") @klasaTreci d-flex align-items-center text-start lh-sm py-2"
-                    id="tab3-btn" data-bs-toggle="tab" data-bs-target="#tab3" type="button" role="tab">
-                    <span>3. Неслагање у<br/>коефицијентима</span>
-                    <span class="badge @(brojTreci > 0 ? "bg-primary" : "bg-secondary") ms-2">@brojTreci</span>
-                </button>
-            </li>
-        }
-        @if (imaCetvrti)
-        {
-            var klasaCetvrti = brojCetvrti > 0 ? "tab-sa-rezultatima" : "tab-bez-rezultata";
-            <li class="nav-item" role="presentation">
-                <button
-                    class="nav-link @(prviAktivan == "tab4" ? "active" : "") @klasaCetvrti d-flex align-items-center text-start lh-sm py-2"
-                    id="tab4-btn" data-bs-toggle="tab" data-bs-target="#tab4" type="button" role="tab">
-                    <span>4. Прековремени<br/>и додатни сати</span>
-                    <span class="badge @(brojCetvrti > 0 ? "bg-primary" : "bg-secondary") ms-2">@brojCetvrti</span>
-                </button>
-            </li>
-        }
-        @if (imaPeti)
-        {
-            var klasaPeti = brojPeti > 0 ? "tab-sa-rezultatima" : "tab-bez-rezultata";
-            <li class="nav-item" role="presentation">
-                <button
-                    class="nav-link @(prviAktivan == "tab5" ? "active" : "") @klasaPeti d-flex align-items-center text-start lh-sm py-2"
-                    id="tab5-btn" data-bs-toggle="tab" data-bs-target="#tab5" type="button" role="tab">
-                    <span>5. Запослени преко<br/>65 година живота</span>
-                    <span class="badge @(brojPeti > 0 ? "bg-primary" : "bg-secondary") ms-2">@brojPeti</span>
-                </button>
-            </li>
-        }
-        @if (imaSesti)
-        {
-            var klasaSesti = brojSesti > 0 ? "tab-sa-rezultatima" : "tab-bez-rezultata";
-            <li class="nav-item" role="presentation">
-                <button
-                    class="nav-link @(prviAktivan == "tab6" ? "active" : "") @klasaSesti d-flex align-items-center text-start lh-sm py-2"
-                    id="tab6-btn" data-bs-toggle="tab" data-bs-target="#tab6" type="button" role="tab">
-                    <span>6. Непуно радно<br/>време (РФЗО vs ЗУ)</span>
-                    <span class="badge @(brojSesti > 0 ? "bg-primary" : "bg-secondary") ms-2">@brojSesti</span>
+                    class="nav-link @aktivan @klasa d-flex align-items-center text-start lh-sm py-2"
+                    id="tab@(redniBroj)-btn" data-bs-toggle="tab" data-bs-target="#tab@(redniBroj)" type="button" role="tab">
+                    <span>@Html.Raw(prikaz.NazivKartice)</span>
+                    <span class="badge @(prikaz.Ukupno > 0 ? "bg-primary" : "bg-secondary") ms-2">@prikaz.Ukupno</span>
                 </button>
             </li>
         }
     </ul>
     <div class="tab-content" id="izvestajiTabContent">
-        @if (imaPrvi)
+        @foreach (var (redniBroj, prikaz) in Model.Izvestaji)
         {
-            ViewBag.IzabraniKljucevi = Model.IzabraniKljuceviStr;
-            <div class="tab-pane fade @(prviAktivan == "tab1" ? "show active" : "")" id="tab1" role="tabpanel">
-                <partial name="IzvestajNepronadjeni" model="Model.NepronadjeniURfzo"/>
-            </div>
-        }
-        @if (imaDrugi)
-        {
-            ViewBag.IzabraniKljucevi = Model.IzabraniKljuceviStr;
-            <div class="tab-pane fade @(prviAktivan == "tab2" ? "show active" : "")" id="tab2" role="tabpanel">
-                <partial name="IzvestajNepronadjeniUZu" model="Model.NepronadjeniUZu"/>
-            </div>
-        }
-        @if (imaTreci)
-        {
-            ViewBag.IzabraniKljucevi = Model.IzabraniKljuceviStr;
-            <div class="tab-pane fade @(prviAktivan == "tab3" ? "show active" : "")" id="tab3" role="tabpanel">
-                <partial name="IzvestajNeslaganjeKoeficijenata" model="Model.NeslaganjeKoeficijenata"/>
-            </div>
-        }
-        @if (imaCetvrti)
-        {
-            ViewBag.IzabraniKljucevi = Model.IzabraniKljuceviStr;
-            <div class="tab-pane fade @(prviAktivan == "tab4" ? "show active" : "")" id="tab4" role="tabpanel">
-                <partial name="IzvestajPrekovremeniSati" model="Model.PrekovremeniSati"/>
-            </div>
-        }
-        @if (imaPeti)
-        {
-            ViewBag.IzabraniKljucevi = Model.IzabraniKljuceviStr;
-            <div class="tab-pane fade @(prviAktivan == "tab5" ? "show active" : "")" id="tab5" role="tabpanel">
-                <partial name="IzvestajPreko65Godina" model="Model.Preko65Godina"/>
-            </div>
-        }
-        @if (imaSesti)
-        {
-            ViewBag.IzabraniKljucevi = Model.IzabraniKljuceviStr;
-            <div class="tab-pane fade @(prviAktivan == "tab6" ? "show active" : "")" id="tab6" role="tabpanel">
-                <partial name="IzvestajNepunoRadnoVreme" model="Model.NepunoRadnoVreme"/>
+            <div class="tab-pane fade @(redniBroj == prviAktivan ? "show active" : "")" id="tab@(redniBroj)" role="tabpanel">
+                <partial name="Izvestaj" model="prikaz"/>
             </div>
         }
     </div>

@@ -1,5 +1,4 @@
-@using System.Data
-@model System.Data.DataTable
+@model List<IstorijaUvoza>
 
 @{
     ViewData["Title"] = "РФЗО - Увоз података";
@@ -92,7 +91,7 @@
                     <h5 class="mb-0">📊 Историја учитаних РФЗО фајлова</h5>
                 </div>
                 <div class="card-body p-0">
-                    @if (Model == null || Model.Rows.Count == 0)
+                    @if (Model == null || Model.Count == 0)
                     {
                         <div class="p-4 text-center text-muted">
                             <p class="mb-0">Нема евидентираних учитавања у бази података.</p>
@@ -112,19 +111,19 @@
                                 </tr>
                                 </thead>
                                 <tbody>
-                                @foreach (DataRow red in Model.Rows)
+                                @foreach (var red in Model)
                                 {
-                                    var nazivFajla = red["NazivFajla"]?.ToString();
-                                    var period = Convert.ToDateTime(red["PeriodUvoza"]);
-                                    var datumUvoza = Convert.ToDateTime(red["DatumUvozaPodataka"]);
-                                    var kljucVremena = VremenskiKljuc.Formiraj(datumUvoza);
+                                    var nazivFajla = red.NazivFajla;
+                                    var period = red.PeriodUvoza;
+                                    var datumUvoza = red.DatumUvozaPodataka;
+                                    var kljucVremena = red.VremeKljuc;
 
                                     <tr>
                                         <td class="fw-bold text-success ps-3">🟢 @nazivFajla</td>
                                         <td>@period.ToString("MM/yyyy")</td>
                                         <td class="text-muted">@datumUvoza.ToString("dd.MM.yyyy HH:mm")</td>
                                         <td class="text-center">
-                                            <span class="badge bg-primary rounded-pill px-3">@red["BrojRedova"]</span>
+                                            <span class="badge bg-primary rounded-pill px-3">@red.BrojRedova</span>
                                         </td>
                                         <td class="text-center pe-3">
                                             <div class="btn-group gap-1">
@@ -179,70 +178,5 @@
 </style>
 
 @section Scripts {
-    <script>
-        const dropZone = document.getElementById('drop-zone');
-        const fileInput = document.getElementById('file-input');
-        const periodInput = document.getElementById('period-input');
-        const statusDiv = document.getElementById('upload-status');
-        const dropZoneText = document.getElementById('drop-zone-text');
-        const rfzoForm = document.getElementById('rfzo-form');
-        const submitBtn = document.getElementById('submit-btn');
-
-        document.addEventListener("DOMContentLoaded", function () {
-            const danas = new Date();
-            const godina = danas.getFullYear();
-            const mesec = String(danas.getMonth() + 1).padStart(2, '0');
-            periodInput.value = godina + '-' + mesec;
-        });
-
-        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(function (eventName) {
-            dropZone.addEventListener(eventName, function (e) {
-                e.preventDefault();
-                e.stopPropagation();
-            }, false);
-            document.body.addEventListener(eventName, function (e) {
-                e.preventDefault();
-                e.stopPropagation();
-            }, false);
-        });
-
-        ['dragenter', 'dragover'].forEach(function (eventName) {
-            dropZone.addEventListener(eventName, function () {
-                dropZone.classList.add('drag-over');
-            }, false);
-        });
-
-        ['dragleave', 'drop'].forEach(function (eventName) {
-            dropZone.addEventListener(eventName, function () {
-                dropZone.classList.remove('drag-over');
-            }, false);
-        });
-
-        dropZone.addEventListener('drop', function (e) {
-            const dt = e.dataTransfer;
-            const files = dt.files;
-            if (files.length > 0) {
-                fileInput.files = files;
-                prikaziIzabraniFajl(files[0].name);
-            }
-        });
-
-        fileInput.addEventListener('change', function () {
-            if (fileInput.files.length > 0) {
-                prikaziIzabraniFajl(fileInput.files[0].name);
-            }
-        });
-
-        function prikaziIzabraniFajl(imeFajla) {
-            dropZoneText.innerText = 'Изабран фајл: ' + imeFajla;
-            statusDiv.className = "alert alert-info mb-3";
-            statusDiv.innerText = 'Спремно за слање: ' + imeFajla;
-            statusDiv.classList.remove('d-none');
-        }
-
-        rfzoForm.addEventListener('submit', function () {
-            submitBtn.disabled = true;
-            submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Учитавање је у току... Сачекајте...';
-        });
-    </script>
+    <script src="~/js/rfzo-index.js" asp-append-version="true"></script>
 }

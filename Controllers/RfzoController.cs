@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
-using UporediPlate.Services;
+using UporediPlate.Data;
+using UporediPlate.Uvoz;
 
 namespace UporediPlate.Controllers;
 
