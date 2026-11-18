@@ -1,4 +1,4 @@
-@model List<UporediPlate.Models.IzvestajPreko65GodinaViewModel>
+@model List<IzvestajPreko65GodinaViewModel>
 @{
     ViewData["Title"] = "Запослени старији од 65 година живота";
     var sortiraniModel = Model?
@@ -9,7 +9,7 @@
         .ToList();
 
     var prvaStavka = sortiraniModel?.FirstOrDefault();
-    int brojZaPrvuUstanovu = prvaStavka != null
+    var brojZaPrvuUstanovu = prvaStavka != null
         ? sortiraniModel!.Count(x => x.SifraZuNormalizovana == prvaStavka.SifraZuNormalizovana)
         : 0;
 }
@@ -21,7 +21,8 @@
                 Запослени старији од 65 година живота (услов за старосну пензију)
             </h2>
             <p class="text-muted small mb-0">
-                Приказ запослених из ЗУ евиденције који имају преко 65 година живота. Црвеним словима су означени запослени који у обрачунском месецу пуне 65 година.
+                Приказ запослених из ЗУ евиденције који имају преко 65 година живота. Црвеним словима су означени
+                запослени који у обрачунском месецу пуне 65 година.
             </p>
         </div>
 
@@ -31,15 +32,17 @@
             </a>
 
             <form asp-controller="Izvestaj" asp-action="IzvozUExcelPreko65Godina" method="post" class="m-0">
-                <input type="hidden" name="izabraniKljuceviStr" value="@ViewBag.IzabraniKljucevi" />
-                <button type="submit" class="btn btn-success btn-sm px-3 fw-semibold shadow-sm" @(sortiraniModel == null || sortiraniModel.Count == 0 ? "disabled" : "")>
+                <input type="hidden" name="izabraniKljuceviStr" value="@ViewBag.IzabraniKljucevi"/>
+                <button type="submit" class="btn btn-success btn-sm px-3 fw-semibold shadow-sm"
+                        @(sortiraniModel == null || sortiraniModel.Count == 0 ? "disabled" : "")>
                     Извоз у Excel
                 </button>
             </form>
 
             <form asp-controller="Izvestaj" asp-action="IzvozUPdfPreko65Godina" method="post" class="m-0">
-                <input type="hidden" name="izabraniKljuceviStr" value="@ViewBag.IzabraniKljucevi" />
-                <button type="submit" class="btn btn-danger btn-sm px-3 fw-semibold shadow-sm" @(sortiraniModel == null || sortiraniModel.Count == 0 ? "disabled" : "")>
+                <input type="hidden" name="izabraniKljuceviStr" value="@ViewBag.IzabraniKljucevi"/>
+                <button type="submit" class="btn btn-danger btn-sm px-3 fw-semibold shadow-sm"
+                        @(sortiraniModel == null || sortiraniModel.Count == 0 ? "disabled" : "")>
                     Извоз у PDF
                 </button>
             </form>
@@ -70,71 +73,71 @@
         <div class="table-responsive">
             <table class="table table-hover table-striped align-middle mb-0" style="font-size: 0.82rem;">
                 <thead class="rfzo-tabela-zaglavlje">
-                    <tr>
-                        <th class="text-center">Период</th>
-                        <th class="text-center">ЈМБГ</th>
-                        <th>Име</th>
-                        <th>Презиме</th>
-                        <th class="text-center">Датум<br />рођења</th>
-                        <th class="text-end">Редован<br />рад</th>
-                        <th class="text-end">Прековремени<br />сати</th>
-                        <th class="text-end">Дежурство<br />сати</th>
-                        <th class="text-end">По позиву<br />сати</th>
-                        <th class="text-end">Приправност<br />сати</th>
-                        <th class="text-end">Укупно<br />нето</th>
-                    </tr>
+                <tr>
+                    <th class="text-center">Период</th>
+                    <th class="text-center">ЈМБГ</th>
+                    <th>Име</th>
+                    <th>Презиме</th>
+                    <th class="text-center">Датум<br/>рођења</th>
+                    <th class="text-end">Редован<br/>рад</th>
+                    <th class="text-end">Прековремени<br/>сати</th>
+                    <th class="text-end">Дежурство<br/>сати</th>
+                    <th class="text-end">По позиву<br/>сати</th>
+                    <th class="text-end">Приправност<br/>сати</th>
+                    <th class="text-end">Укупно<br/>нето</th>
+                </tr>
                 </thead>
                 <tbody>
-                    @if (sortiraniModel != null && sortiraniModel.Count > 0)
+                @if (sortiraniModel != null && sortiraniModel.Count > 0)
+                {
+                    var trenutnaSifraZu = prvaStavka!.SifraZuNormalizovana;
+
+                    foreach (var item in sortiraniModel)
                     {
-                        string trenutnaSifraZu = prvaStavka!.SifraZuNormalizovana;
-
-                        foreach (var item in sortiraniModel)
+                        if (item.SifraZuNormalizovana != trenutnaSifraZu)
                         {
-                            if (item.SifraZuNormalizovana != trenutnaSifraZu)
-                            {
-                                trenutnaSifraZu = item.SifraZuNormalizovana;
-                                int brojZaUstanovu = sortiraniModel.Count(x => x.SifraZuNormalizovana == trenutnaSifraZu);
+                            trenutnaSifraZu = item.SifraZuNormalizovana;
+                            var brojZaUstanovu = sortiraniModel.Count(x => x.SifraZuNormalizovana == trenutnaSifraZu);
 
-                                <tr class="zu-naslovna-linija">
-                                    <td colspan="11" class="py-2 px-3">
-                                        <div class="d-flex justify-content-between align-items-center">
+                            <tr class="zu-naslovna-linija">
+                                <td colspan="11" class="py-2 px-3">
+                                    <div class="d-flex justify-content-between align-items-center">
                                             <span>
                                                 Шифра ЗУ: @item.SifraZuOriginal (@item.SifraZuNormalizovana) &nbsp;|&nbsp; Назив ЗУ: @item.NazivZu
                                             </span>
-                                            <span class="badge bg-light text-dark">Број радника: @brojZaUstanovu</span>
-                                        </div>
-                                    </td>
-                                </tr>
-                            }
-
-                            string stilBoje = item.Puni65UTomMesecu
-                                ? "color: #dc3545 !important; font-weight: 700;"
-                                : "color: #212529 !important;";
-
-                            <tr>
-                                <td class="text-center" style="@stilBoje">@item.PeriodUvoza.ToString("MM.yyyy")</td>
-                                <td class="text-center font-monospace" style="@stilBoje">@item.Jmbg</td>
-                                <td style="@stilBoje">@item.Ime</td>
-                                <td class="fw-semibold" style="@stilBoje">@item.Prezime</td>
-                                <td class="text-center" style="@stilBoje">@item.DatumRodjenja.ToString("dd.MM.yyyy")</td>
-                                <td class="text-end" style="@stilBoje">@item.RedovanRad.ToString("N2")</td>
-                                <td class="text-end" style="@stilBoje">@item.PrekovremeniSati.ToString("N2")</td>
-                                <td class="text-end" style="@stilBoje">@item.DezurstvoSati.ToString("N2")</td>
-                                <td class="text-end" style="@stilBoje">@item.PoPozivuSati.ToString("N2")</td>
-                                <td class="text-end" style="@stilBoje">@item.PripravnostSati.ToString("N2")</td>
-                                <td class="text-end fw-bold" style="@stilBoje">@item.UkupanNeto.ToString("N2")</td>
+                                        <span class="badge bg-light text-dark">Број радника: @brojZaUstanovu</span>
+                                    </div>
+                                </td>
                             </tr>
                         }
-                    }
-                    else
-                    {
+
+                        var stilBoje = item.Puni65UTomMesecu
+                            ? "color: #dc3545 !important; font-weight: 700;"
+                            : "color: #212529 !important;";
+
                         <tr>
-                            <td colspan="11" class="text-center text-success fw-semibold py-4">
-                                ✅ У изабраним ЗУ фајловима нема запослених који су старији од 65 година!
-                            </td>
+                            <td class="text-center" style="@stilBoje">@item.PeriodUvoza.ToString("MM.yyyy")</td>
+                            <td class="text-center font-monospace" style="@stilBoje">@item.Jmbg</td>
+                            <td style="@stilBoje">@item.Ime</td>
+                            <td class="fw-semibold" style="@stilBoje">@item.Prezime</td>
+                            <td class="text-center" style="@stilBoje">@item.DatumRodjenja.ToString("dd.MM.yyyy")</td>
+                            <td class="text-end" style="@stilBoje">@item.RedovanRad.ToString("N2")</td>
+                            <td class="text-end" style="@stilBoje">@item.PrekovremeniSati.ToString("N2")</td>
+                            <td class="text-end" style="@stilBoje">@item.DezurstvoSati.ToString("N2")</td>
+                            <td class="text-end" style="@stilBoje">@item.PoPozivuSati.ToString("N2")</td>
+                            <td class="text-end" style="@stilBoje">@item.PripravnostSati.ToString("N2")</td>
+                            <td class="text-end fw-bold" style="@stilBoje">@item.UkupanNeto.ToString("N2")</td>
                         </tr>
                     }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="11" class="text-center text-success fw-semibold py-4">
+                            ✅ У изабраним ЗУ фајловима нема запослених који су старији од 65 година!
+                        </td>
+                    </tr>
+                }
                 </tbody>
             </table>
         </div>

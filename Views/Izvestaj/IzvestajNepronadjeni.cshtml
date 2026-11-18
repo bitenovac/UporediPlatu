@@ -1,4 +1,4 @@
-@model List<UporediPlate.Models.IzvestajNepronadjeniViewModel>
+@model List<IzvestajNepronadjeniViewModel>
 @{
     ViewData["Title"] = "Радници који се налазе на списку ЗУ а који нису на списку РФЗО-а";
     var sortiraniModel = Model?
@@ -9,7 +9,7 @@
         .ToList();
 
     var prvaStavka = sortiraniModel?.FirstOrDefault();
-    int brojZaPrvuUstanovu = prvaStavka != null
+    var brojZaPrvuUstanovu = prvaStavka != null
         ? sortiraniModel!.Count(x => x.SifraZuNormalizovana == prvaStavka.SifraZuNormalizovana)
         : 0;
 }
@@ -21,7 +21,8 @@
                 Радници који се налазе на списку ЗУ а који нису на списку РФЗО-а
             </h2>
             <p class="text-muted small mb-0">
-                Приказ запослених из изабраних ЗУ фајлова чији се ЈМБГ и Шифра ЗУ (без водеће јединице) не налазе у РФЗО бази за дати период.
+                Приказ запослених из изабраних ЗУ фајлова чији се ЈМБГ и Шифра ЗУ (без водеће јединице) не налазе у РФЗО
+                бази за дати период.
             </p>
         </div>
 
@@ -33,16 +34,18 @@
 
             <!-- 2. Зелено дугме: Извоз у Excel -->
             <form asp-controller="Izvestaj" asp-action="IzvozUExcel" method="post" class="m-0">
-                <input type="hidden" name="izabraniKljuceviStr" value="@ViewBag.IzabraniKljucevi" />
-                <button type="submit" class="btn btn-success btn-sm px-3 fw-semibold shadow-sm" @(sortiraniModel == null || sortiraniModel.Count == 0 ? "disabled" : "")>
+                <input type="hidden" name="izabraniKljuceviStr" value="@ViewBag.IzabraniKljucevi"/>
+                <button type="submit" class="btn btn-success btn-sm px-3 fw-semibold shadow-sm"
+                        @(sortiraniModel == null || sortiraniModel.Count == 0 ? "disabled" : "")>
                     Извоз у Excel
                 </button>
             </form>
 
             <!-- 3. Црвено дугме: Извоз у PDF -->
             <form asp-controller="Izvestaj" asp-action="IzvozUPdf" method="post" class="m-0">
-                <input type="hidden" name="izabraniKljuceviStr" value="@ViewBag.IzabraniKljucevi" />
-                <button type="submit" class="btn btn-danger btn-sm px-3 fw-semibold shadow-sm" @(sortiraniModel == null || sortiraniModel.Count == 0 ? "disabled" : "")>
+                <input type="hidden" name="izabraniKljuceviStr" value="@ViewBag.IzabraniKljucevi"/>
+                <button type="submit" class="btn btn-danger btn-sm px-3 fw-semibold shadow-sm"
+                        @(sortiraniModel == null || sortiraniModel.Count == 0 ? "disabled" : "")>
                     Извоз у PDF
                 </button>
             </form>
@@ -76,55 +79,55 @@
         <div class="table-responsive">
             <table class="table table-hover table-striped align-middle mb-0" style="font-size: 0.82rem;">
                 <thead class="rfzo-tabela-zaglavlje">
-                    <tr>
-                        <th>Период</th>
-                        <th>Ниво</th>
-                        <th>ЈМБГ</th>
-                        <th>Презиме и име</th>
-                        <th>Радно место</th>
-                    </tr>
+                <tr>
+                    <th>Период</th>
+                    <th>Ниво</th>
+                    <th>ЈМБГ</th>
+                    <th>Презиме и име</th>
+                    <th>Радно место</th>
+                </tr>
                 </thead>
                 <tbody>
-                    @if (sortiraniModel != null && sortiraniModel.Count > 0)
+                @if (sortiraniModel != null && sortiraniModel.Count > 0)
+                {
+                    var trenutnaSifraZu = prvaStavka!.SifraZuNormalizovana;
+
+                    foreach (var item in sortiraniModel)
                     {
-                        string trenutnaSifraZu = prvaStavka!.SifraZuNormalizovana;
-
-                        foreach (var item in sortiraniModel)
+                        if (item.SifraZuNormalizovana != trenutnaSifraZu)
                         {
-                            if (item.SifraZuNormalizovana != trenutnaSifraZu)
-                            {
-                                trenutnaSifraZu = item.SifraZuNormalizovana;
-                                int brojZaUstanovu = sortiraniModel.Count(x => x.SifraZuNormalizovana == trenutnaSifraZu);
+                            trenutnaSifraZu = item.SifraZuNormalizovana;
+                            var brojZaUstanovu = sortiraniModel.Count(x => x.SifraZuNormalizovana == trenutnaSifraZu);
 
-                                <tr class="zu-naslovna-linija">
-                                    <td colspan="5" class="py-2 px-3">
-                                        <div class="d-flex justify-content-between align-items-center">
+                            <tr class="zu-naslovna-linija">
+                                <td colspan="5" class="py-2 px-3">
+                                    <div class="d-flex justify-content-between align-items-center">
                                             <span>
                                                 Шифра ЗУ: @item.SifraZuOriginal (@item.SifraZuNormalizovana) &nbsp;|&nbsp; Назив ЗУ: @item.NazivZu
                                             </span>
-                                            <span class="badge bg-light text-dark">Број радника: @brojZaUstanovu</span>
-                                        </div>
-                                    </td>
-                                </tr>
-                            }
-
-                            <tr>
-                                <td>@item.PeriodUvoza.ToString("MM.yyyy")</td>
-                                <td>@item.Nivo</td>
-                                <td class="font-monospace">@item.Jmbg</td>
-                                <td class="fw-semibold">@item.Prezime @item.Ime</td>
-                                <td>@item.RadnoMesto</td>
+                                        <span class="badge bg-light text-dark">Број радника: @brojZaUstanovu</span>
+                                    </div>
+                                </td>
                             </tr>
                         }
-                    }
-                    else
-                    {
+
                         <tr>
-                            <td colspan="5" class="text-center text-success fw-semibold py-4">
-                                ✅ Сви радници из изабраних ЗУ фајлова су успешно пронађени у РФЗО евиденцији!
-                            </td>
+                            <td>@item.PeriodUvoza.ToString("MM.yyyy")</td>
+                            <td>@item.Nivo</td>
+                            <td class="font-monospace">@item.Jmbg</td>
+                            <td class="fw-semibold">@item.Prezime @item.Ime</td>
+                            <td>@item.RadnoMesto</td>
                         </tr>
                     }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="5" class="text-center text-success fw-semibold py-4">
+                            ✅ Сви радници из изабраних ЗУ фајлова су успешно пронађени у РФЗО евиденцији!
+                        </td>
+                    </tr>
+                }
                 </tbody>
             </table>
         </div>

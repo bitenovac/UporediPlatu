@@ -1,5 +1,5 @@
 @using System.Data
-@model DataTable
+@model System.Data.DataTable
 
 @{
     ViewData["Title"] = "РФЗО - Увоз података";
@@ -11,227 +11,238 @@
             <h2 class="mb-3 text-success fw-bold">Страница РФЗО</h2>
             <p class="lead text-muted">Изаберите обрачунски период, а затим превуците или учитајте званичну Excel
                 табелу.</p>
-                <hr />
+            <hr/>
+        </div>
+    </div>
+
+    <div class="row justify-content-center mt-3">
+        <div class="col-md-8">
+            <div class="card shadow-lg border-0 mb-4">
+                <div class="card-header text-white py-3" style="background-color: #1f6f43;">
+                    <h5 class="mb-0 d-flex align-items-center gap-2">
+                        📄 Учитавање РФЗО Excel табеле
+                    </h5>
+                </div>
+                <div class="card-body p-4">
+
+                    <form id="rfzo-form" asp-controller="Rfzo" asp-action="UveziRfzoPodatke" method="post"
+                          enctype="multipart/form-data">
+
+                        <div class="row g-3 mb-4 bg-light p-3 rounded border">
+                            <div class="col-12">
+                                <label class="form-label fw-bold text-secondary mb-1">Обрачунски период за који се уноси
+                                    плата:</label>
+                            </div>
+                            <div class="col-sm-12">
+                                <input type="month" id="period-input" name="period" class="form-control border-success"
+                                       required/>
+                                <small class="text-muted">Изаберите месец и годину из календара пре него што учитате
+                                    фајл</small>
+                            </div>
+                        </div>
+
+                        <div id="drop-zone" class="drop-zone mb-4">
+                            <div class="drop-zone-content">
+                                <div class="excel-icon mb-3">📁</div>
+                                <h5 class="fw-bold text-success" id="drop-zone-text">Превуците Excel фајл овде</h5>
+                                <p class="text-muted small">Подржани формати: .xlsx, .xls</p>
+                                <span class="d-block my-2 text-muted">или</span>
+                                <button type="button" class="btn btn-success btn-sm px-4"
+                                        onclick="document.getElementById('file-input').click()">
+                                    Изаберите са рачунара
+                                </button>
+                            </div>
+                            <input type="file" id="file-input" name="excelFajl" accept=".xlsx, .xls"
+                                   style="display: none;" required/>
+                        </div>
+
+                        <div id="upload-status" class="alert d-none mb-3" role="alert"></div>
+
+                        <button type="submit" id="submit-btn" class="btn btn-success w-100 py-2 fw-bold shadow-sm">
+                            🚀 Покрени увоз података
+                        </button>
+                    </form>
+
+                </div>
+            </div>
+
+            <!-- Системска обавештења из контролера -->
+            @if (TempData["UspehPoruka"] != null)
+            {
+                <div class="alert alert-success alert-dismissible fade show mb-4" role="alert">
+                    @TempData["UspehPoruka"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            }
+            @if (TempData["GreskaPoruka"] != null)
+            {
+                <div class="alert alert-danger alert-dismissible fade show mb-4" role="alert">
+                    @TempData["GreskaPoruka"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            }
+        </div>
+    </div>
+
+    <!-- ТАБЕЛА ИСТОРИЈЕ ИСПОД ПОЉА ЗА УБАЦИВАЊЕ -->
+    <div class="row justify-content-center mt-4">
+        <div class="col-md-9">
+            <div class="card shadow border-0 mb-5">
+                <div class="card-header bg-secondary text-white py-3">
+                    <h5 class="mb-0">📊 Историја учитаних РФЗО фајлова</h5>
+                </div>
+                <div class="card-body p-0">
+                    @if (Model == null || Model.Rows.Count == 0)
+                    {
+                        <div class="p-4 text-center text-muted">
+                            <p class="mb-0">Нема евидентираних учитавања у бази података.</p>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-hover table-striped mb-0 align-middle">
+                                <thead class="table-dark">
+                                <tr>
+                                    <th class="ps-3">Назив увезеног фајла</th>
+                                    <th>Обрачунски период</th>
+                                    <th>Датум и време увоза</th>
+                                    <th class="text-center">Број записа</th>
+                                    <th class="text-center pe-3" style="width: 120px;">Акције</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                @foreach (DataRow red in Model.Rows)
+                                {
+                                    var nazivFajla = red["NazivFajla"]?.ToString();
+                                    var period = Convert.ToDateTime(red["PeriodUvoza"]);
+                                    var datumUvoza = Convert.ToDateTime(red["DatumUvozaPodataka"]);
+                                    var kljucVremena = datumUvoza.ToString("yyyyMMddHHmmssfff");
+
+                                    <tr>
+                                        <td class="fw-bold text-success ps-3">🟢 @nazivFajla</td>
+                                        <td>@period.ToString("MM/yyyy")</td>
+                                        <td class="text-muted">@datumUvoza.ToString("dd.MM.yyyy HH:mm")</td>
+                                        <td class="text-center">
+                                            <span class="badge bg-primary rounded-pill px-3">@red["BrojRedova"]</span>
+                                        </td>
+                                        <td class="text-center pe-3">
+                                            <div class="btn-group gap-1">
+                                                <a asp-controller="Rfzo" asp-action="PregledUvozaRfzo"
+                                                   asp-route-vremeKljuc="@kljucVremena"
+                                                   class="btn btn-sm btn-outline-primary"
+                                                   title="Прегледај податке">👁️</a>
+                                                <a asp-controller="Rfzo" asp-action="ObrisiUvozRfzo"
+                                                   asp-route-vremeKljuc="@kljucVremena"
+                                                   class="btn btn-sm btn-outline-danger" title="Обриши фајл из базе"
+                                                   onclick="return confirm('Да ли сте сигурни да желите да потпуно обришете овај фајл?')">🗑️</a>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                </div>
             </div>
         </div>
+    </div>
+</div>
 
-        <div class="row justify-content-center mt-3">
-            <div class="col-md-8">
-                <div class="card shadow-lg border-0 mb-4">
-                    <div class="card-header text-white py-3" style="background-color: #1f6f43;">
-                        <h5 class="mb-0 d-flex align-items-center gap-2">
-                            📄 Учитавање РФЗО Excel табеле
-                        </h5>
-                    </div>
-                    <div class="card-body p-4">
-                    
-                        <form id="rfzo-form" asp-controller="Rfzo" asp-action="UveziRfzoPodatke" method="post"
-                              enctype="multipart/form-data">
-                        
-                            <div class="row g-3 mb-4 bg-light p-3 rounded border">
-                                <div class="col-12">
-                                    <label class="form-label fw-bold text-secondary mb-1">Обрачунски период за који се уноси
-                                        плата:</label>
-                                    </div>
-                                    <div class="col-sm-12">
-                                        <input type="month" id="period-input" name="period" class="form-control border-success"
-                                               required />
-                                        <small class="text-muted">Изаберите месец и годину из календара пре него што учитате
-                                            фајл</small>
-                                        </div>
-                                    </div>
-                        
-                                    <div id="drop-zone" class="drop-zone mb-4">
-                                        <div class="drop-zone-content">
-                                            <div class="excel-icon mb-3">📁</div>
-                                            <h5 class="fw-bold text-success" id="drop-zone-text">Превуците Excel фајл овде</h5>
-                                            <p class="text-muted small">Подржани формати: .xlsx, .xls</p>
-                                            <span class="d-block my-2 text-muted">или</span>
-                                            <button type="button" class="btn btn-success btn-sm px-4"
-                                                    onclick="document.getElementById('file-input').click()">
-                                                Изаберите са рачунара
-                                            </button>
-                                        </div>
-                                        <input type="file" id="file-input" name="excelFajl" accept=".xlsx, .xls"
-                                               style="display: none;" required />
-                                    </div>
+<style>
+    .drop-zone {
+        width: 100%;
+        height: 220px;
+        padding: 30px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        border: 2px dashed #1f6f43;
+        border-radius: 8px;
+        background-color: #fcfdfe;
+        cursor: pointer;
+        transition: all 0.2s ease-in-out;
+    }
 
-                                    <div id="upload-status" class="alert d-none mb-3" role="alert"></div>
+    .drop-zone.drag-over {
+        background-color: #e8f5e9;
+        border-color: #2e7d32;
+        transform: scale(1.01);
+    }
 
-                                    <button type="submit" id="submit-btn" class="btn btn-success w-100 py-2 fw-bold shadow-sm">
-                                        🚀 Покрени увоз података
-                                    </button>
-                                </form>
+    .excel-icon {
+        font-size: 3.5rem;
+        line-height: 1;
+    }
+</style>
 
-                            </div>
-                        </div>
+@section Scripts {
+    <script>
+        const dropZone = document.getElementById('drop-zone');
+        const fileInput = document.getElementById('file-input');
+        const periodInput = document.getElementById('period-input');
+        const statusDiv = document.getElementById('upload-status');
+        const dropZoneText = document.getElementById('drop-zone-text');
+        const rfzoForm = document.getElementById('rfzo-form');
+        const submitBtn = document.getElementById('submit-btn');
 
-                        <!-- Системска обавештења из контролера -->
-                        @if (TempData["UspehPoruka"] != null)
-                        {
-                            <div class="alert alert-success alert-dismissible fade show mb-4" role="alert">
-                                @TempData["UspehPoruka"]
-                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                            </div>
-                        }
-                        @if (TempData["GreskaPoruka"] != null)
-                        {
-                            <div class="alert alert-danger alert-dismissible fade show mb-4" role="alert">
-                                @TempData["GreskaPoruka"]
-                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                            </div>
-                        }
-                    </div>
-                </div>
+        document.addEventListener("DOMContentLoaded", function () {
+            const danas = new Date();
+            const godina = danas.getFullYear();
+            const mesec = String(danas.getMonth() + 1).padStart(2, '0');
+            periodInput.value = godina + '-' + mesec;
+        });
 
-                <!-- ТАБЕЛА ИСТОРИЈЕ ИСПОД ПОЉА ЗА УБАЦИВАЊЕ -->
-                <div class="row justify-content-center mt-4">
-                    <div class="col-md-9">
-                        <div class="card shadow border-0 mb-5">
-                            <div class="card-header bg-secondary text-white py-3">
-                                <h5 class="mb-0">📊 Историја учитаних РФЗО фајлова</h5>
-                            </div>
-                            <div class="card-body p-0">
-                                @if (Model == null || Model.Rows.Count == 0)
-                                {
-                                    <div class="p-4 text-center text-muted">
-                                        <p class="mb-0">Нема евидентираних учитавања у бази података.</p>
-                                    </div>
-                                }
-                                else
-                                {
-                                    <div class="table-responsive">
-                                        <table class="table table-hover table-striped mb-0 align-middle">
-                                            <thead class="table-dark">
-                                                <tr>
-                                                    <th class="ps-3">Назив увезеног фајла</th>
-                                                    <th>Обрачунски период</th>
-                                                    <th>Датум и време увоза</th>
-                                                    <th class="text-center">Број записа</th>
-                                                    <th class="text-center pe-3" style="width: 120px;">Акције</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                @foreach (DataRow red in Model.Rows)
-                                                {
-                                                    string? nazivFajla = red["NazivFajla"]?.ToString();
-                                                    DateTime period = Convert.ToDateTime(red["PeriodUvoza"]);
-                                                    DateTime datumUvoza = Convert.ToDateTime(red["DatumUvozaPodataka"]);
-                                                    string kljucVremena = datumUvoza.ToString("yyyyMMddHHmmssfff");
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(function (eventName) {
+            dropZone.addEventListener(eventName, function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }, false);
+            document.body.addEventListener(eventName, function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }, false);
+        });
 
-                                                    <tr>
-                                                        <td class="fw-bold text-success ps-3">🟢 @nazivFajla</td>
-                                                        <td>@period.ToString("MM/yyyy")</td>
-                                                        <td class="text-muted">@datumUvoza.ToString("dd.MM.yyyy HH:mm")</td>
-                                                        <td class="text-center">
-                                                            <span class="badge bg-primary rounded-pill px-3">@red["BrojRedova"]</span>
-                                                        </td>
-                                                        <td class="text-center pe-3">
-                                                            <div class="btn-group gap-1">
-                                                                <a asp-controller="Rfzo" asp-action="PregledUvozaRfzo"
-                                                                   asp-route-vremeKljuc="@kljucVremena"
-                                                                   class="btn btn-sm btn-outline-primary" title="Прегледај податке">👁️</a>
-                                                                <a asp-controller="Rfzo" asp-action="ObrisiUvozRfzo"
-                                                                   asp-route-vremeKljuc="@kljucVremena"
-                                                                   class="btn btn-sm btn-outline-danger" title="Обриши фајл из базе"
-                                                                   onclick="return confirm('Да ли сте сигурни да желите да потпуно обришете овај фајл?')">🗑️</a>
-                                                            </div>
-                                                        </td>
-                                                    </tr>
-                                                }
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                }
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+        ['dragenter', 'dragover'].forEach(function (eventName) {
+            dropZone.addEventListener(eventName, function () {
+                dropZone.classList.add('drag-over');
+            }, false);
+        });
 
-            <style>
-                .drop-zone {
-                    width: 100%;
-                    height: 220px;
-                    padding: 30px;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    text-align: center;
-                    border: 2px dashed #1f6f43;
-                    border-radius: 8px;
-                    background-color: #fcfdfe;
-                    cursor: pointer;
-                    transition: all 0.2s ease-in-out;
-                }
+        ['dragleave', 'drop'].forEach(function (eventName) {
+            dropZone.addEventListener(eventName, function () {
+                dropZone.classList.remove('drag-over');
+            }, false);
+        });
 
-                .drop-zone.drag-over {
-                    background-color: #e8f5e9;
-                    border-color: #2e7d32;
-                    transform: scale(1.01);
-                }
-
-                .excel-icon {
-                    font-size: 3.5rem;
-                    line-height: 1;
-                }
-            </style>
-
-            @section Scripts {
-                <script>
-                    const dropZone = document.getElementById('drop-zone');
-                    const fileInput = document.getElementById('file-input');
-                    const periodInput = document.getElementById('period-input');
-                    const statusDiv = document.getElementById('upload-status');
-                    const dropZoneText = document.getElementById('drop-zone-text');
-                    const rfzoForm = document.getElementById('rfzo-form');
-                    const submitBtn = document.getElementById('submit-btn');
-
-                    document.addEventListener("DOMContentLoaded", function () {
-                        const danas = new Date();
-                        const godina = danas.getFullYear();
-                        const mesec = String(danas.getMonth() + 1).padStart(2, '0');
-                        periodInput.value = godina + '-' + mesec;
-                    });
-
-                    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(function (eventName) {
-                        dropZone.addEventListener(eventName, function (e) { e.preventDefault(); e.stopPropagation(); }, false);
-                        document.body.addEventListener(eventName, function (e) { e.preventDefault(); e.stopPropagation(); }, false);
-                    });
-
-                    ['dragenter', 'dragover'].forEach(function (eventName) {
-                        dropZone.addEventListener(eventName, function () { dropZone.classList.add('drag-over'); }, false);
-                    });
-
-                    ['dragleave', 'drop'].forEach(function (eventName) {
-                        dropZone.addEventListener(eventName, function () { dropZone.classList.remove('drag-over'); }, false);
-                    });
-
-                    dropZone.addEventListener('drop', function (e) {
-                        const dt = e.dataTransfer;
-                        const files = dt.files;
-                        if (files.length > 0) {
-                            fileInput.files = files;
-                            prikaziIzabraniFajl(files[0].name);
-                        }
-                    });
-
-                    fileInput.addEventListener('change', function () {
-                        if (fileInput.files.length > 0) {
-                            prikaziIzabraniFajl(fileInput.files[0].name);
-                        }
-                    });
-
-                    function prikaziIzabraniFajl(imeFajla) {
-                        dropZoneText.innerText = 'Изабран фајл: ' + imeFajla;
-                        statusDiv.className = "alert alert-info mb-3";
-                        statusDiv.innerText = 'Спремно за слање: ' + imeFajla;
-                        statusDiv.classList.remove('d-none');
-                    }
-
-                    rfzoForm.addEventListener('submit', function () {
-                        submitBtn.disabled = true;
-                        submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Учитавање је у току... Сачекајте...';
-                    });
-                </script>
+        dropZone.addEventListener('drop', function (e) {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            if (files.length > 0) {
+                fileInput.files = files;
+                prikaziIzabraniFajl(files[0].name);
             }
+        });
+
+        fileInput.addEventListener('change', function () {
+            if (fileInput.files.length > 0) {
+                prikaziIzabraniFajl(fileInput.files[0].name);
+            }
+        });
+
+        function prikaziIzabraniFajl(imeFajla) {
+            dropZoneText.innerText = 'Изабран фајл: ' + imeFajla;
+            statusDiv.className = "alert alert-info mb-3";
+            statusDiv.innerText = 'Спремно за слање: ' + imeFajla;
+            statusDiv.classList.remove('d-none');
+        }
+
+        rfzoForm.addEventListener('submit', function () {
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Учитавање је у току... Сачекајте...';
+        });
+    </script>
+}

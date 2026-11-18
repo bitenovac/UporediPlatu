@@ -1,4 +1,4 @@
-@model List<UporediPlate.Models.IzvestajNeslaganjeKoeficijenataViewModel>
+@model List<IzvestajNeslaganjeKoeficijenataViewModel>
 @{
     ViewData["Title"] = "Неслагање у основним и укупним коефицијентима (РФЗО и ЗУ)";
     var sortiraniModel = Model?
@@ -8,7 +8,7 @@
         .ToList();
 
     var prvaStavka = sortiraniModel?.FirstOrDefault();
-    int brojZaPrvuUstanovu = prvaStavka != null
+    var brojZaPrvuUstanovu = prvaStavka != null
         ? sortiraniModel!.Count(x => x.SifraZuNormalizovana == prvaStavka.SifraZuNormalizovana)
         : 0;
 }
@@ -31,17 +31,21 @@
             </a>
 
             <form asp-controller="Izvestaj" asp-action="IzvozUExcelNeslaganjeKoeficijenata" method="post" class="m-0">
-                <input type="hidden" name="izabraniKljuceviStr" value="@ViewBag.IzabraniKljucevi" />
+                <input type="hidden" name="izabraniKljuceviStr" value="@ViewBag.IzabraniKljucevi"/>
                 <button type="submit" class="btn btn-success btn-sm px-3 fw-semibold shadow-sm" @(sortiraniModel == null
-                        || sortiraniModel.Count == 0 ? "disabled" : "")>
+                || sortiraniModel.Count == 0
+                    ? "disabled"
+                    : "")>
                     Извоз у Excel
                 </button>
             </form>
 
             <form asp-controller="Izvestaj" asp-action="IzvozUPdfNeslaganjeKoeficijenata" method="post" class="m-0">
-                <input type="hidden" name="izabraniKljuceviStr" value="@ViewBag.IzabraniKljucevi" />
+                <input type="hidden" name="izabraniKljuceviStr" value="@ViewBag.IzabraniKljucevi"/>
                 <button type="submit" class="btn btn-danger btn-sm px-3 fw-semibold shadow-sm" @(sortiraniModel == null
-                        || sortiraniModel.Count == 0 ? "disabled" : "")>
+                || sortiraniModel.Count == 0
+                    ? "disabled"
+                    : "")>
                     Извоз у PDF
                 </button>
             </form>
@@ -73,75 +77,75 @@
         <div class="table-responsive">
             <table class="table table-hover table-striped align-middle mb-0" style="font-size: 0.82rem;">
                 <thead class="rfzo-tabela-zaglavlje">
-                    <tr>
-                        <th class="text-center">Период</th>
-                        <th class="text-center">ЈМБГ</th>
-                        <th>Име</th>
-                        <th>Презиме</th>
-                        <th>Назив радног места (РФЗО)</th>
-                        <th class="text-end">Осн. коеф.<br />(РФЗО)</th>
-                        <th class="text-end">Осн. коеф.<br />(ЗУ)</th>
-                        <th class="text-end">Укуп. коеф.<br />(РФЗО)</th>
-                        <th class="text-end">Укуп. коеф.<br />(ЗУ)</th>
-                    </tr>
+                <tr>
+                    <th class="text-center">Период</th>
+                    <th class="text-center">ЈМБГ</th>
+                    <th>Име</th>
+                    <th>Презиме</th>
+                    <th>Назив радног места (РФЗО)</th>
+                    <th class="text-end">Осн. коеф.<br/>(РФЗО)</th>
+                    <th class="text-end">Осн. коеф.<br/>(ЗУ)</th>
+                    <th class="text-end">Укуп. коеф.<br/>(РФЗО)</th>
+                    <th class="text-end">Укуп. коеф.<br/>(ЗУ)</th>
+                </tr>
                 </thead>
                 <tbody>
-                    @if (sortiraniModel != null && sortiraniModel.Count > 0)
+                @if (sortiraniModel != null && sortiraniModel.Count > 0)
+                {
+                    var trenutnaSifraZu = prvaStavka!.SifraZuNormalizovana;
+
+                    foreach (var item in sortiraniModel)
                     {
-                        string trenutnaSifraZu = prvaStavka!.SifraZuNormalizovana;
-
-                        foreach (var item in sortiraniModel)
+                        if (item.SifraZuNormalizovana != trenutnaSifraZu)
                         {
-                            if (item.SifraZuNormalizovana != trenutnaSifraZu)
-                            {
-                                trenutnaSifraZu = item.SifraZuNormalizovana;
-                                int brojZaUstanovu = sortiraniModel.Count(x => x.SifraZuNormalizovana == trenutnaSifraZu);
+                            trenutnaSifraZu = item.SifraZuNormalizovana;
+                            var brojZaUstanovu = sortiraniModel.Count(x => x.SifraZuNormalizovana == trenutnaSifraZu);
 
-                                <tr class="zu-naslovna-linija">
-                                    <td colspan="9" class="py-2 px-3">
-                                        <div class="d-flex justify-content-between align-items-center">
+                            <tr class="zu-naslovna-linija">
+                                <td colspan="9" class="py-2 px-3">
+                                    <div class="d-flex justify-content-between align-items-center">
                                             <span>
                                                 Шифра ЗУ: @item.SifraZuOriginal (@item.SifraZuNormalizovana) &nbsp;|&nbsp; Назив ЗУ:
                                                 @item.NazivZu
                                             </span>
-                                            <span class="badge bg-light text-dark">Број радника: @brojZaUstanovu</span>
-                                        </div>
-                                    </td>
-                                </tr>
-                            }
-
-                            bool razlikaOsnovni = Math.Abs(item.OsnovniKoefRfzo - item.OsnovniKoefZu) >= 0.0001m;
-                            bool razlikaUkupni = Math.Abs(item.UkupniKoefRfzo - item.UkupniKoefZu) >= 0.0001m;
-
-                            <tr>
-                                <td class="text-center">@item.PeriodUvoza.ToString("MM.yyyy")</td>
-                                <td class="text-center font-monospace">@item.Jmbg</td>
-                                <td>@item.Ime</td>
-                                <td class="fw-semibold">@item.Prezime</td>
-                                <td>
-                                    <div class="kolona-radno-mesto" title="@item.NazivRM">@item.NazivRM</div>
+                                        <span class="badge bg-light text-dark">Број радника: @brojZaUstanovu</span>
+                                    </div>
                                 </td>
-                                <td class="text-end @(razlikaOsnovni ? "fw-bold text-danger" : "")">
-                                    @item.OsnovniKoefRfzo.ToString("N2")</td>
-                                    <td class="text-end @(razlikaOsnovni ? "fw-bold text-danger" : "")">
-                                        @item.OsnovniKoefZu.ToString("N2")</td>
-                                        <td class="text-end @(razlikaUkupni ? "fw-bold text-danger" : "")">
-                                            @item.UkupniKoefRfzo.ToString("N2")</td>
-                                            <td class="text-end @(razlikaUkupni ? "fw-bold text-danger" : "")">
-                                                @item.UkupniKoefZu.ToString("N2")</td>
-                                            </tr>
-                                        }
-                                    }
-                    else
-                                    {
-                                        <tr>
-                                            <td colspan="9" class="text-center text-success fw-semibold py-4">
-                                                ✅ Сви радници који се налазе у обе евиденције имају усклађене основне и укупне коефицијенте!
-                                            </td>
-                                        </tr>
-                                    }
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
+                            </tr>
+                        }
+
+                        var razlikaOsnovni = Math.Abs(item.OsnovniKoefRfzo - item.OsnovniKoefZu) >= 0.0001m;
+                        var razlikaUkupni = Math.Abs(item.UkupniKoefRfzo - item.UkupniKoefZu) >= 0.0001m;
+
+                        <tr>
+                            <td class="text-center">@item.PeriodUvoza.ToString("MM.yyyy")</td>
+                            <td class="text-center font-monospace">@item.Jmbg</td>
+                            <td>@item.Ime</td>
+                            <td class="fw-semibold">@item.Prezime</td>
+                            <td>
+                                <div class="kolona-radno-mesto" title="@item.NazivRM">@item.NazivRM</div>
+                            </td>
+                            <td class="text-end @(razlikaOsnovni ? "fw-bold text-danger" : "")">
+                                @item.OsnovniKoefRfzo.ToString("N2")</td>
+                            <td class="text-end @(razlikaOsnovni ? "fw-bold text-danger" : "")">
+                                @item.OsnovniKoefZu.ToString("N2")</td>
+                            <td class="text-end @(razlikaUkupni ? "fw-bold text-danger" : "")">
+                                @item.UkupniKoefRfzo.ToString("N2")</td>
+                            <td class="text-end @(razlikaUkupni ? "fw-bold text-danger" : "")">
+                                @item.UkupniKoefZu.ToString("N2")</td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="9" class="text-center text-success fw-semibold py-4">
+                            ✅ Сви радници који се налазе у обе евиденције имају усклађене основне и укупне коефицијенте!
+                        </td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

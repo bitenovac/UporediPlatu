@@ -1,4 +1,4 @@
-@model List<UporediPlate.Models.ZuIstorijaViewModel>
+@model List<ZuIstorijaViewModel>
 @{
     ViewData["Title"] = "Креирање извештаја - Упореди Плату";
 }
@@ -79,7 +79,8 @@
                                     3. Неслагање у основним и укупним коефицијентима
                                 </label>
                                 <p class="text-muted small mb-0 mt-1">
-                                    Пореди основни коефицијент и збир коефицијената из РФЗО базе са подацима достављеним у ЗУ фајловима.
+                                    Пореди основни коефицијент и збир коефицијената из РФЗО базе са подацима достављеним
+                                    у ЗУ фајловима.
                                 </p>
                             </div>
                         </div>
@@ -94,7 +95,8 @@
                                     4. Прековремени сати, дежурство, рад по позиву и приправност (ЗУ)
                                 </label>
                                 <p class="text-muted small mb-0 mt-1">
-                                    Приказује запослене из ЗУ фајлова са додатним сатима већим од нуле, сортирано опадајуће.
+                                    Приказује запослене из ЗУ фајлова са додатним сатима већим од нуле, сортирано
+                                    опадајуће.
                                 </p>
                             </div>
                         </div>
@@ -109,7 +111,8 @@
                                     5. Запослени старији од 65 година живота (ЗУ)
                                 </label>
                                 <p class="text-muted small mb-0 mt-1">
-                                    Приказује запослене који су стекли 65 година живота. Црвеним словима су истакнути они који у обрачунском месецу пуне 65 година.
+                                    Приказује запослене који су стекли 65 година живота. Црвеним словима су истакнути
+                                    они који у обрачунском месецу пуне 65 година.
                                 </p>
                             </div>
                         </div>
@@ -124,7 +127,8 @@
                                     6. Контрола запослених са непуним радним временом (РФЗО vs ЗУ)
                                 </label>
                                 <p class="text-muted small mb-0 mt-1">
-                                    Приказује запослене са процентом радног времена мањим од 100% у РФЗО бази и пореди са обрачунатим сатима у ЗУ.
+                                    Приказује запослене са процентом радног времена мањим од 100% у РФЗО бази и пореди
+                                    са обрачунатим сатима у ЗУ.
                                 </p>
                             </div>
                         </div>
@@ -144,46 +148,47 @@
             <div class="table-responsive">
                 <table class="table table-hover align-middle mb-0" style="font-size: 0.85rem;">
                     <thead class="table-dark" style="background-color: #263238;">
-                        <tr>
-                            <th style="width: 50px;" class="text-center ps-3">
-                                <input type="checkbox" class="form-check-input" id="selectAll" title="Изабери све"
-                                       style="cursor: pointer;" />
-                            </th>
-                            <th>Назив увезеног фајла</th>
-                            <th>Обрачунски период</th>
-                            <th>Датум и време увоза</th>
-                            <th>Број записа</th>
-                        </tr>
+                    <tr>
+                        <th style="width: 50px;" class="text-center ps-3">
+                            <input type="checkbox" class="form-check-input" id="selectAll" title="Изабери све"
+                                   style="cursor: pointer;"/>
+                        </th>
+                        <th>Назив увезеног фајла</th>
+                        <th>Обрачунски период</th>
+                        <th>Датум и време увоза</th>
+                        <th>Број записа</th>
+                    </tr>
                     </thead>
                     <tbody>
-                        @if (Model != null && Model.Count > 0)
-                        {
-                            foreach (var item in Model)
-                            {
-                                <tr>
-                                    <td class="text-center ps-3">
-                                        <input type="checkbox" class="form-check-input file-checkbox" name="izabraniKljucevi"
-                                               value="@item.VremeKljuc" style="cursor: pointer;" />
-                                    </td>
-                                    <td class="text-secondary">
-                                        <span class="text-success me-1">●</span> @item.NazivFajla
-                                    </td>
-                                    <td>@item.PeriodUvoza.ToString("MM.yyyy")</td>
-                                    <td>@item.DatumUvozaPodataka.ToString("dd.MM.yyyy HH:mm")</td>
-                                    <td>
-                                        <span class="badge bg-primary px-2 py-1">@item.BrojRedova</span>
-                                    </td>
-                                </tr>
-                            }
-                        }
-                        else
+                    @if (Model != null && Model.Count > 0)
+                    {
+                        foreach (var item in Model)
                         {
                             <tr>
-                                <td colspan="5" class="text-center text-muted py-4">
-                                    Нема евидентираних увоза за Здравствене Установе.
+                                <td class="text-center ps-3">
+                                    <input type="checkbox" class="form-check-input file-checkbox"
+                                           name="izabraniKljucevi"
+                                           value="@item.VremeKljuc" style="cursor: pointer;"/>
+                                </td>
+                                <td class="text-secondary">
+                                    <span class="text-success me-1">●</span> @item.NazivFajla
+                                </td>
+                                <td>@item.PeriodUvoza.ToString("MM.yyyy")</td>
+                                <td>@item.DatumUvozaPodataka.ToString("dd.MM.yyyy HH:mm")</td>
+                                <td>
+                                    <span class="badge bg-primary px-2 py-1">@item.BrojRedova</span>
                                 </td>
                             </tr>
                         }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="5" class="text-center text-muted py-4">
+                                Нема евидентираних увоза за Здравствене Установе.
+                            </td>
+                        </tr>
+                    }
                     </tbody>
                 </table>
             </div>

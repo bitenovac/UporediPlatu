@@ -1,275 +1,330 @@
-using System;
-using System.IO;
 using System.Data;
-using System.Linq;
-using System.Threading.Tasks;
-using System.Collections.Generic;
-using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Logging;
+using System.Globalization;
+using System.Text;
 using ExcelDataReader;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Data.SqlClient;
-using UporediPlate.Models;
-using UporediPlate;
+using Microsoft.EntityFrameworkCore;
 
-namespace UporediPlate.Services
+namespace UporediPlate.Services;
+
+public class UvozZuServis
 {
-    public class UvozZuServis
+    private readonly AppDbContext _context;
+    private readonly ILogger<UvozZuServis> _logger;
+
+    public UvozZuServis(AppDbContext context, ILogger<UvozZuServis> logger)
     {
-        private readonly AppDbContext _context;
-        private readonly ILogger<UvozZuServis> _logger;
+        _context = context;
+        _logger = logger;
+    }
 
-        public UvozZuServis(AppDbContext context, ILogger<UvozZuServis> logger)
+    public DataTable DobijIstorijuUvoza()
+    {
+        var dtIstorija = new DataTable();
+        dtIstorija.Columns.Add("NazivFajla", typeof(string));
+        dtIstorija.Columns.Add("PeriodUvoza", typeof(DateTime));
+        dtIstorija.Columns.Add("DatumUvozaPodataka", typeof(DateTime));
+        dtIstorija.Columns.Add("BrojRedova", typeof(int));
+
+        try
         {
-            _context = context;
-            _logger = logger;
+            // Динамички генеришемо назив у формату Шифра ЗУ_Ниво.xlsx из података у табели
+            var grupe = _context.ZuUvozi
+                .GroupBy(x => new { x.PeriodUvoza, x.DatumUvozaPodataka })
+                .Select(g => new
+                {
+                    SifraZu = g.Max(x => x.SifraZu) ?? "Непознато",
+                    Nivo = g.Max(x => x.Nivo) ?? "Непознато",
+                    g.Key.PeriodUvoza,
+                    g.Key.DatumUvozaPodataka,
+                    BrojRedova = g.Count()
+                })
+                .OrderByDescending(x => x.DatumUvozaPodataka)
+                .ToList();
+
+            foreach (var g in grupe)
+            {
+                var formatiraniNaziv = $"{g.SifraZu}_{g.Nivo}.xlsx";
+                dtIstorija.Rows.Add(formatiraniNaziv, g.PeriodUvoza, g.DatumUvozaPodataka, g.BrojRedova);
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Грешка приликом читања историје ЗУ из сервиса.");
         }
 
-        public DataTable DobijIstorijuUvoza()
+        return dtIstorija;
+    }
+
+    public async Task<(bool Uspeh, string Poruka)> ObradiZuExcel(IFormFile excelFajl, DateTime period)
+    {
+        if (excelFajl == null || excelFajl.Length == 0)
         {
-            DataTable dtIstorija = new DataTable();
-            dtIstorija.Columns.Add("NazivFajla", typeof(string));
-            dtIstorija.Columns.Add("PeriodUvoza", typeof(DateTime));
-            dtIstorija.Columns.Add("DatumUvozaPodataka", typeof(DateTime));
-            dtIstorija.Columns.Add("BrojRedova", typeof(int));
-
-            try
-            {
-                // Динамички генеришемо назив у формату Шифра ЗУ_Ниво.xlsx из података у табели
-                var grupe = _context.ZuUvozi
-                    .GroupBy(x => new { x.PeriodUvoza, x.DatumUvozaPodataka })
-                    .Select(g => new
-                    {
-                        SifraZu = g.Max(x => x.SifraZu) ?? "Непознато",
-                        Nivo = g.Max(x => x.Nivo) ?? "Непознато",
-                        PeriodUvoza = g.Key.PeriodUvoza,
-                        DatumUvozaPodataka = g.Key.DatumUvozaPodataka,
-                        BrojRedova = g.Count()
-                    })
-                    .OrderByDescending(x => x.DatumUvozaPodataka)
-                    .ToList();
-
-                foreach (var g in grupe)
-                {
-                    string formatiraniNaziv = $"{g.SifraZu}_{g.Nivo}.xlsx";
-                    dtIstorija.Rows.Add(formatiraniNaziv, g.PeriodUvoza, g.DatumUvozaPodataka, g.BrojRedova);
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Грешка приликом читања историје ЗУ из сервиса.");
-            }
-
-            return dtIstorija;
+            return (false, "Фајл није изабран или је празан.");
         }
 
-        public async Task<(bool Uspeh, string Poruka)> ObradiZuExcel(IFormFile excelFajl, DateTime period)
+        var ekstenzija = Path.GetExtension(excelFajl.FileName).ToLowerInvariant();
+        if (ekstenzija != ".xlsx" && ekstenzija != ".xls")
         {
-            if (excelFajl == null || excelFajl.Length == 0)
-                return (false, "Фајл није изабран или је празан.");
+            return (false, "Неисправан формат. Дозвољени су само .xlsx и .xls фајлови.");
+        }
 
-            var ekstenzija = Path.GetExtension(excelFajl.FileName).ToLowerInvariant();
-            if (ekstenzija != ".xlsx" && ekstenzija != ".xls")
-                return (false, "Неисправан формат. Дозвољени су само .xlsx и .xls фајлови.");
+        Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+        var trenutnoVremeUvoza = DateTime.Now;
 
-            System.Text.Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
-            DateTime trenutnoVremeUvoza = DateTime.Now;
-
-            try
+        try
+        {
+            using (var stream = new MemoryStream())
             {
-                using (var stream = new MemoryStream())
+                await excelFajl.CopyToAsync(stream);
+                stream.Position = 0;
+
+                using (var reader = ExcelReaderFactory.CreateReader(stream))
                 {
-                    await excelFajl.CopyToAsync(stream);
-                    stream.Position = 0;
-
-                    using (var reader = ExcelReaderFactory.CreateReader(stream))
+                    var result = reader.AsDataSet();
+                    if (result.Tables.Count == 0)
                     {
-                        var result = reader.AsDataSet();
-                        if (result.Tables.Count == 0)
-                            return (false, "Excel не садржи табеле.");
-
-                        DataTable izvornaTabela = result.Tables[0];
-
-                        int indeksRedaSaKolonama = -1;
-                        for (int i = 0; i < izvornaTabela.Rows.Count; i++)
-                        {
-                            string prvaCelija = izvornaTabela.Rows[i][0]?.ToString()?.ToLower() ?? "";
-                            if (prvaCelija.Contains("filijala"))
-                            {
-                                indeksRedaSaKolonama = i;
-                                break;
-                            }
-                        }
-
-                        if (indeksRedaSaKolonama == -1)
-                            return (false, "Није пронађен важећи ред са колонама (Недостаје реч Филијала у првој колони).");
-
-                        DataTable dtZaBazu = new DataTable();
-                        dtZaBazu.Columns.Add("Filijala", typeof(string));
-                        dtZaBazu.Columns.Add("SifraZu", typeof(string));
-                        dtZaBazu.Columns.Add("NazivZu", typeof(string));
-                        dtZaBazu.Columns.Add("Nivo", typeof(string));
-                        dtZaBazu.Columns.Add("Mesec", typeof(int));
-                        dtZaBazu.Columns.Add("Jmbg", typeof(string));
-                        dtZaBazu.Columns.Add("Ime", typeof(string));
-                        dtZaBazu.Columns.Add("Prezime", typeof(string));
-                        dtZaBazu.Columns.Add("RadnoMesto", typeof(string));
-                        dtZaBazu.Columns.Add("OsnovniKoef", typeof(decimal));
-                        dtZaBazu.Columns.Add("UkupniKoef", typeof(decimal));
-                        dtZaBazu.Columns.Add("SatiUkupno", typeof(decimal));
-                        dtZaBazu.Columns.Add("PrekovremeniSati", typeof(decimal));
-                        dtZaBazu.Columns.Add("DezurstvoSati", typeof(decimal));
-                        dtZaBazu.Columns.Add("PoPozivuSati", typeof(decimal));
-                        dtZaBazu.Columns.Add("PrekovremeniNeto", typeof(decimal));
-                        dtZaBazu.Columns.Add("DezurstvoNeto", typeof(decimal));
-                        dtZaBazu.Columns.Add("PoPozivuNeto", typeof(decimal));
-                        dtZaBazu.Columns.Add("PripravnostSati", typeof(decimal));
-                        dtZaBazu.Columns.Add("PripravnostNeto", typeof(decimal));
-                        dtZaBazu.Columns.Add("UkupanNeto", typeof(decimal));
-                        dtZaBazu.Columns.Add("Bruto1", typeof(decimal));
-                        dtZaBazu.Columns.Add("Bruto2", typeof(decimal));
-                        dtZaBazu.Columns.Add("PeriodUvoza", typeof(DateTime));
-                        dtZaBazu.Columns.Add("DatumUvozaPodataka", typeof(DateTime));
-                        dtZaBazu.Columns.Add("NazivFajla", typeof(string));
-
-                        int pocetniRedZaPodatke = indeksRedaSaKolonama + 2;
-
-                        for (int i = pocetniRedZaPodatke; i < izvornaTabela.Rows.Count; i++)
-                        {
-                            DataRow red = izvornaTabela.Rows[i];
-
-                            string siroviJmbg = "";
-                            var jmbgObj = red[5];
-                            if (jmbgObj != null && jmbgObj != DBNull.Value)
-                            {
-                                if (jmbgObj is double dJmbg)
-                                    siroviJmbg = Math.Truncate(dJmbg).ToString(System.Globalization.CultureInfo.InvariantCulture);
-                                else if (decimal.TryParse(jmbgObj.ToString()?.Replace(",", "."), System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out decimal jmbgDec))
-                                    siroviJmbg = Math.Truncate(jmbgDec).ToString(System.Globalization.CultureInfo.InvariantCulture);
-                                else
-                                    siroviJmbg = jmbgObj.ToString()?.Trim() ?? "";
-                            }
-
-                            if (siroviJmbg.Length == 12) siroviJmbg = "0" + siroviJmbg;
-                            if (string.IsNullOrEmpty(siroviJmbg) || siroviJmbg.Length < 13 || siroviJmbg.ToLower().Contains("jmbg")) continue;
-
-                            dtZaBazu.Rows.Add(
-                                red[0]?.ToString()?.Trim() ?? "",
-                                red[1]?.ToString()?.Trim() ?? "",
-                                red[2]?.ToString()?.Trim() ?? "",
-                                red[3]?.ToString()?.Trim() ?? "",
-                                DekodirajInt(red[4]),
-                                siroviJmbg,
-                                red[6]?.ToString()?.Trim() ?? "",
-                                red[7]?.ToString()?.Trim() ?? "",
-                                red[8]?.ToString()?.Trim() ?? "",
-                                DekodirajDecimal(red[9]),
-                                DekodirajDecimal(red[10]),
-                                DekodirajDecimal(red[11]),
-                                DekodirajDecimal(red[12]),
-                                DekodirajDecimal(red[13]),
-                                DekodirajDecimal(red[14]),
-                                DekodirajDecimal(red[15]),
-                                DekodirajDecimal(red[16]),
-                                DekodirajDecimal(red[17]),
-                                DekodirajDecimal(red[18]),
-                                DekodirajDecimal(red[19]),
-                                DekodirajDecimal(red[20]),
-                                DekodirajDecimal(red[21]),
-                                DekodirajDecimal(red[22]),
-                                period,
-                                trenutnoVremeUvoza,
-                                excelFajl.FileName
-                            );
-                        }
-
-                        if (dtZaBazu.Rows.Count > 0)
-                        {
-                            string stringKonekcije = _context.Database.GetDbConnection().ConnectionString;
-                            using (SqlConnection konekcija = new SqlConnection(stringKonekcije))
-                            {
-                                await konekcija.OpenAsync();
-                                using (SqlBulkCopy bulkCopy = new SqlBulkCopy(konekcija))
-                                {
-                                    bulkCopy.DestinationTableName = "ZuUvozi";
-                                    foreach (DataColumn col in dtZaBazu.Columns)
-                                    {
-                                        bulkCopy.ColumnMappings.Add(col.ColumnName, col.ColumnName);
-                                    }
-                                    await bulkCopy.WriteToServerAsync(dtZaBazu);
-                                }
-                            }
-                            return (true, $"Подаци из ЗУ су успешно увезени. Укупно записа: {dtZaBazu.Rows.Count}");
-                        }
-                        return (false, "Нема валидних редова за увоз.");
+                        return (false, "Excel не садржи табеле.");
                     }
+
+                    var izvornaTabela = result.Tables[0];
+
+                    var indeksRedaSaKolonama = -1;
+                    for (var i = 0; i < izvornaTabela.Rows.Count; i++)
+                    {
+                        var prvaCelija = izvornaTabela.Rows[i][0]?.ToString()?.ToLower() ?? "";
+                        if (prvaCelija.Contains("filijala"))
+                        {
+                            indeksRedaSaKolonama = i;
+                            break;
+                        }
+                    }
+
+                    if (indeksRedaSaKolonama == -1)
+                    {
+                        return (false, "Није пронађен важећи ред са колонама (Недостаје реч Филијала у првој колони).");
+                    }
+
+                    var dtZaBazu = new DataTable();
+                    dtZaBazu.Columns.Add("Filijala", typeof(string));
+                    dtZaBazu.Columns.Add("SifraZu", typeof(string));
+                    dtZaBazu.Columns.Add("NazivZu", typeof(string));
+                    dtZaBazu.Columns.Add("Nivo", typeof(string));
+                    dtZaBazu.Columns.Add("Mesec", typeof(int));
+                    dtZaBazu.Columns.Add("Jmbg", typeof(string));
+                    dtZaBazu.Columns.Add("Ime", typeof(string));
+                    dtZaBazu.Columns.Add("Prezime", typeof(string));
+                    dtZaBazu.Columns.Add("RadnoMesto", typeof(string));
+                    dtZaBazu.Columns.Add("OsnovniKoef", typeof(decimal));
+                    dtZaBazu.Columns.Add("UkupniKoef", typeof(decimal));
+                    dtZaBazu.Columns.Add("SatiUkupno", typeof(decimal));
+                    dtZaBazu.Columns.Add("PrekovremeniSati", typeof(decimal));
+                    dtZaBazu.Columns.Add("DezurstvoSati", typeof(decimal));
+                    dtZaBazu.Columns.Add("PoPozivuSati", typeof(decimal));
+                    dtZaBazu.Columns.Add("PrekovremeniNeto", typeof(decimal));
+                    dtZaBazu.Columns.Add("DezurstvoNeto", typeof(decimal));
+                    dtZaBazu.Columns.Add("PoPozivuNeto", typeof(decimal));
+                    dtZaBazu.Columns.Add("PripravnostSati", typeof(decimal));
+                    dtZaBazu.Columns.Add("PripravnostNeto", typeof(decimal));
+                    dtZaBazu.Columns.Add("UkupanNeto", typeof(decimal));
+                    dtZaBazu.Columns.Add("Bruto1", typeof(decimal));
+                    dtZaBazu.Columns.Add("Bruto2", typeof(decimal));
+                    dtZaBazu.Columns.Add("PeriodUvoza", typeof(DateTime));
+                    dtZaBazu.Columns.Add("DatumUvozaPodataka", typeof(DateTime));
+                    dtZaBazu.Columns.Add("NazivFajla", typeof(string));
+
+                    var pocetniRedZaPodatke = indeksRedaSaKolonama + 2;
+
+                    for (var i = pocetniRedZaPodatke; i < izvornaTabela.Rows.Count; i++)
+                    {
+                        var red = izvornaTabela.Rows[i];
+
+                        var siroviJmbg = "";
+                        var jmbgObj = red[5];
+                        if (jmbgObj != null && jmbgObj != DBNull.Value)
+                        {
+                            if (jmbgObj is double dJmbg)
+                            {
+                                siroviJmbg = Math.Truncate(dJmbg).ToString(CultureInfo.InvariantCulture);
+                            }
+                            else if (decimal.TryParse(jmbgObj.ToString()?.Replace(",", "."), NumberStyles.Any,
+                                         CultureInfo.InvariantCulture, out var jmbgDec))
+                            {
+                                siroviJmbg = Math.Truncate(jmbgDec).ToString(CultureInfo.InvariantCulture);
+                            }
+                            else
+                            {
+                                siroviJmbg = jmbgObj.ToString()?.Trim() ?? "";
+                            }
+                        }
+
+                        if (siroviJmbg.Length == 12)
+                        {
+                            siroviJmbg = "0" + siroviJmbg;
+                        }
+
+                        if (string.IsNullOrEmpty(siroviJmbg) || siroviJmbg.Length < 13 ||
+                            siroviJmbg.ToLower().Contains("jmbg"))
+                        {
+                            continue;
+                        }
+
+                        dtZaBazu.Rows.Add(
+                            red[0]?.ToString()?.Trim() ?? "",
+                            red[1]?.ToString()?.Trim() ?? "",
+                            red[2]?.ToString()?.Trim() ?? "",
+                            red[3]?.ToString()?.Trim() ?? "",
+                            DekodirajInt(red[4]),
+                            siroviJmbg,
+                            red[6]?.ToString()?.Trim() ?? "",
+                            red[7]?.ToString()?.Trim() ?? "",
+                            red[8]?.ToString()?.Trim() ?? "",
+                            DekodirajDecimal(red[9]),
+                            DekodirajDecimal(red[10]),
+                            DekodirajDecimal(red[11]),
+                            DekodirajDecimal(red[12]),
+                            DekodirajDecimal(red[13]),
+                            DekodirajDecimal(red[14]),
+                            DekodirajDecimal(red[15]),
+                            DekodirajDecimal(red[16]),
+                            DekodirajDecimal(red[17]),
+                            DekodirajDecimal(red[18]),
+                            DekodirajDecimal(red[19]),
+                            DekodirajDecimal(red[20]),
+                            DekodirajDecimal(red[21]),
+                            DekodirajDecimal(red[22]),
+                            period,
+                            trenutnoVremeUvoza,
+                            excelFajl.FileName
+                        );
+                    }
+
+                    if (dtZaBazu.Rows.Count > 0)
+                    {
+                        var stringKonekcije = _context.Database.GetDbConnection().ConnectionString;
+                        using (var konekcija = new SqlConnection(stringKonekcije))
+                        {
+                            await konekcija.OpenAsync();
+                            using (var bulkCopy = new SqlBulkCopy(konekcija))
+                            {
+                                bulkCopy.DestinationTableName = "ZuUvozi";
+                                foreach (DataColumn col in dtZaBazu.Columns)
+                                {
+                                    bulkCopy.ColumnMappings.Add(col.ColumnName, col.ColumnName);
+                                }
+
+                                await bulkCopy.WriteToServerAsync(dtZaBazu);
+                            }
+                        }
+
+                        return (true, $"Подаци из ЗУ су успешно увезени. Укупно записа: {dtZaBazu.Rows.Count}");
+                    }
+
+                    return (false, "Нема валидних редова за увоз.");
                 }
             }
-            catch (Exception ex)
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Грешка при ЗУ увозу унутар сервиса.");
+            return (false, $"Грешка: {ex.Message}");
+        }
+    }
+
+    private static decimal DekodirajDecimal(object? obj)
+    {
+        if (obj == null || obj == DBNull.Value)
+        {
+            return 0;
+        }
+
+        if (obj is double d)
+        {
+            return Convert.ToDecimal(d);
+        }
+
+        if (obj is decimal dec)
+        {
+            return dec;
+        }
+
+        if (obj is float f)
+        {
+            return Convert.ToDecimal(f);
+        }
+
+        if (obj is int i)
+        {
+            return i;
+        }
+
+        if (obj is long l)
+        {
+            return l;
+        }
+
+        var tekst = obj.ToString()?.Trim() ?? "";
+        if (string.IsNullOrWhiteSpace(tekst))
+        {
+            return 0;
+        }
+
+        tekst = tekst.Replace(" ", "");
+        if (tekst.Contains('.') && tekst.Contains(','))
+        {
+            if (tekst.LastIndexOf(',') > tekst.LastIndexOf('.'))
             {
-                _logger.LogError(ex, "Грешка при ЗУ увозу унутар сервиса.");
-                return (false, $"Грешка: {ex.Message}");
+                tekst = tekst.Replace(".", "").Replace(",", ".");
+            }
+            else
+            {
+                tekst = tekst.Replace(",", "");
             }
         }
-        private static decimal DekodirajDecimal(object? obj)
+        else if (tekst.Contains(','))
         {
-            if (obj == null || obj == DBNull.Value) return 0;
-            if (obj is double d) return Convert.ToDecimal(d);
-            if (obj is decimal dec) return dec;
-            if (obj is float f) return Convert.ToDecimal(f);
-            if (obj is int i) return i;
-            if (obj is long l) return l;
-            string tekst = obj.ToString()?.Trim() ?? "";
-            if (string.IsNullOrWhiteSpace(tekst)) return 0;
-            tekst = tekst.Replace(" ", "");
-            if (tekst.Contains('.') && tekst.Contains(','))
-            {
-                if (tekst.LastIndexOf(',') > tekst.LastIndexOf('.'))
-                    tekst = tekst.Replace(".", "").Replace(",", ".");
-                else
-                    tekst = tekst.Replace(",", "");
-            }
-            else if (tekst.Contains(','))
-            {
-                tekst = tekst.Replace(",", ".");
-            }
-            return decimal.TryParse(tekst, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out decimal rez) ? rez : 0;
+            tekst = tekst.Replace(",", ".");
         }
-        private static int DekodirajInt(object? obj)
+
+        return decimal.TryParse(tekst, NumberStyles.Any, CultureInfo.InvariantCulture, out var rez) ? rez : 0;
+    }
+
+    private static int DekodirajInt(object? obj) => Convert.ToInt32(Math.Truncate(DekodirajDecimal(obj)));
+
+    // Логика за сигурно брисање ЗУ увоза
+    public async Task<(bool Uspeh, string Poruka)> ObrisiUvoz(string vremeKljuc)
+    {
+        try
         {
-            return Convert.ToInt32(Math.Truncate(DekodirajDecimal(obj)));
-        }
-        // Логика за сигурно брисање ЗУ увоза
-        public async Task<(bool Uspeh, string Poruka)> ObrisiUvoz(string vremeKljuc)
-        {
-            try
+            if (string.IsNullOrEmpty(vremeKljuc) || vremeKljuc.Length < 14)
             {
-                if (string.IsNullOrEmpty(vremeKljuc) || vremeKljuc.Length < 14)
-                    return (false, "Неисправан временски кључ.");
-                int godina = int.Parse(vremeKljuc.Substring(0, 4));
-                int mesec = int.Parse(vremeKljuc.Substring(4, 2));
-                int dan = int.Parse(vremeKljuc.Substring(6, 2));
-                int sat = int.Parse(vremeKljuc.Substring(8, 2));
-                int minut = int.Parse(vremeKljuc.Substring(10, 2));
-                int sekund = int.Parse(vremeKljuc.Substring(12, 2));
-                DateTime pocetakSekunde = new DateTime(godina, mesec, dan, sat, minut, sekund);
-                DateTime krajSekunde = pocetakSekunde.AddSeconds(1);
-                var zaBrisanje = _context.ZuUvozi
+                return (false, "Неисправан временски кључ.");
+            }
+
+            var godina = int.Parse(vremeKljuc.Substring(0, 4));
+            var mesec = int.Parse(vremeKljuc.Substring(4, 2));
+            var dan = int.Parse(vremeKljuc.Substring(6, 2));
+            var sat = int.Parse(vremeKljuc.Substring(8, 2));
+            var minut = int.Parse(vremeKljuc.Substring(10, 2));
+            var sekund = int.Parse(vremeKljuc.Substring(12, 2));
+            var pocetakSekunde = new DateTime(godina, mesec, dan, sat, minut, sekund);
+            var krajSekunde = pocetakSekunde.AddSeconds(1);
+            var zaBrisanje = _context.ZuUvozi
                 .Where(x => x.DatumUvozaPodataka >= pocetakSekunde && x.DatumUvozaPodataka < krajSekunde)
                 .ToList();
-                if (zaBrisanje.Any())
-                {
-                    _context.ZuUvozi.RemoveRange(zaBrisanje);
-                    await _context.SaveChangesAsync();
-                    return (true, "Увоз из ЗУ је успешно обрисан.");
-                }
-                return (false, "Подаци нису пронађени.");
-            }
-            catch (Exception ex)
+            if (zaBrisanje.Any())
             {
-                _logger.LogError(ex, "Грешка приликом брисања ЗУ увоза.");
-                return (false, $"Грешка при брисању: {ex.Message}");
+                _context.ZuUvozi.RemoveRange(zaBrisanje);
+                await _context.SaveChangesAsync();
+                return (true, "Увоз из ЗУ је успешно обрисан.");
             }
+
+            return (false, "Подаци нису пронађени.");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Грешка приликом брисања ЗУ увоза.");
+            return (false, $"Грешка при брисању: {ex.Message}");
         }
     }
 }

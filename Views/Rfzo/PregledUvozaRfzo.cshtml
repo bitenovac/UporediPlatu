@@ -1,9 +1,9 @@
 @using System.Reflection
-@model IEnumerable<UporediPlate.Models.RfzoUvoz>
+@model IEnumerable<RfzoUvoz>
 
 @{
     ViewData["Title"] = "РФЗО - Детаљан преглед увоза";
-    var svojstva = typeof(UporediPlate.Models.RfzoUvoz).GetProperties(BindingFlags.Public | BindingFlags.Instance);
+    var svojstva = typeof(RfzoUvoz).GetProperties(BindingFlags.Public | BindingFlags.Instance);
 }
 
 <div class="container-fluid mt-4 px-4">
@@ -45,65 +45,67 @@
             else
             {
                 <div class="table-responsive">
-                    <table id="tabela-rfzo" class="table table-sm table-hover table-striped mb-0 align-middle small" style="font-size: 0.8rem;">
-                        <thead class="table-dark sticky-top align-middle" style="background-color: #263238; z-index: 1;">
+                    <table id="tabela-rfzo" class="table table-sm table-hover table-striped mb-0 align-middle small"
+                           style="font-size: 0.8rem;">
+                        <thead class="table-dark sticky-top align-middle"
+                               style="background-color: #263238; z-index: 1;">
+                        <tr>
+                            <th class="ps-3" style="width: 50px;">#</th>
+                            @foreach (var prop in svojstva)
+                            {
+                                if (prop.Name == "PeriodUvoza")
+                                {
+                                    <th>PeriodNaKojiSeSpisakOdnosi</th>
+                                }
+                                else
+                                {
+                                    <th>@prop.Name</th>
+                                }
+                            }
+                        </tr>
+                        </thead>
+                        <tbody>
+                        @{
+                            var brojac = 1;
+                        }
+                        @foreach (var stavka in Model)
+                        {
                             <tr>
-                                <th class="ps-3" style="width: 50px;">#</th>
+                                <td class="fw-bold text-muted ps-3">@brojac</td>
                                 @foreach (var prop in svojstva)
                                 {
-                                    if (prop.Name == "PeriodUvoza")
+                                    var vrednost = prop.GetValue(stavka);
+
+                                    if (vrednost == null)
                                     {
-                                        <th>PeriodNaKojiSeSpisakOdnosi</th>
+                                        <td><em class="text-muted">/</em></td>
+                                    }
+                                    else if (prop.Name.ToUpper() == "JMBG")
+                                    {
+                                        var jmbgTekst = (vrednost.ToString() ?? "").Trim().PadLeft(13, '0');
+                                        <td style="vnd.ms-excel.numberformat:@@" class="text-start">@jmbgTekst</td>
+                                    }
+                                    else if (prop.Name == "PeriodUvoza" && vrednost is DateTime datumPerioda)
+                                    {
+                                        var periodFormatiran = datumPerioda.ToString("MM/yyyy");
+                                        <td style="vnd.ms-excel.numberformat:@@">@periodFormatiran</td>
+                                    }
+                                    else if (vrednost is decimal || vrednost is double || vrednost is float)
+                                    {
+                                        <td class="text-end">@string.Format("{0:N2}", vrednost)</td>
+                                    }
+                                    else if (vrednost is DateTime vreme)
+                                    {
+                                        <td>@vreme.ToString("dd.MM.yyyy")</td>
                                     }
                                     else
                                     {
-                                        <th>@prop.Name</th>
+                                        <td>@vrednost.ToString()</td>
                                     }
                                 }
                             </tr>
-                        </thead>
-                        <tbody>
-                            @{
-                                int brojac = 1;
-                            }
-                            @foreach (var stavka in Model)
-                            {
-                                <tr>
-                                    <td class="fw-bold text-muted ps-3">@brojac</td>
-                                    @foreach (var prop in svojstva)
-                                    {
-                                        var vrednost = prop.GetValue(stavka);
-
-                                        if (vrednost == null)
-                                        {
-                                            <td><em class="text-muted">/</em></td>
-                                        }
-                                        else if (prop.Name.ToUpper() == "JMBG")
-                                        {
-                                            string jmbgTekst = (vrednost.ToString() ?? "").Trim().PadLeft(13, '0');
-                                            <td style="vnd.ms-excel.numberformat:@@" class="text-start">@jmbgTekst</td>
-                                        }
-                                        else if (prop.Name == "PeriodUvoza" && vrednost is DateTime datumPerioda)
-                                        {
-                                            string periodFormatiran = datumPerioda.ToString("MM/yyyy");
-                                            <td style="vnd.ms-excel.numberformat:@@">@periodFormatiran</td>
-                                        }
-                                        else if (vrednost is decimal || vrednost is double || vrednost is float)
-                                        {
-                                            <td class="text-end">@string.Format("{0:N2}", vrednost)</td>
-                                        }
-                                        else if (vrednost is DateTime vreme)
-                                        {
-                                            <td>@vreme.ToString("dd.MM.yyyy")</td>
-                                        }
-                                        else
-                                        {
-                                            <td>@vrednost.ToString()</td>
-                                        }
-                                    }
-                                </tr>
-                                brojac++;
-                            }
+                            brojac++;
+                        }
                         </tbody>
                     </table>
                 </div>
@@ -160,7 +162,7 @@
             const meta = '<meta http-equiv="content-type" content="application/vnd.ms-excel; charset=UTF-8">';
             const template = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://w3.org">' + meta + '<head>' + style + '</head><body>' + html + '</body></html>';
 
-            const blob = new Blob([template], { type: "application/vnd.ms-excel" });
+            const blob = new Blob([template], {type: "application/vnd.ms-excel"});
             const url = URL.createObjectURL(blob);
 
             const a = document.createElement("a");

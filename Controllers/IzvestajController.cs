@@ -1,54 +1,47 @@
-using System.Collections.Generic;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using UporediPlate.Services.Izvestaji;
 
-namespace UporediPlate.Controllers
+namespace UporediPlate.Controllers;
+
+public class IzvestajController : Controller
 {
-    public class IzvestajController : Controller
+    private readonly KoordinatorIzvestajaServis _koordinator;
+
+    public IzvestajController(KoordinatorIzvestajaServis koordinator) => _koordinator = koordinator;
+
+    [HttpGet]
+    public IActionResult Index()
     {
-        private readonly KoordinatorIzvestajaServis _koordinator;
+        var sortirano = _koordinator.VratiSortiranuIstorijuZuFajlova();
+        return View(sortirano);
+    }
 
-        public IzvestajController(KoordinatorIzvestajaServis koordinator)
+    [HttpPost]
+    public async Task<IActionResult> GenerisiIzvestaj(List<string> izabraniKljucevi, List<string> izabraniIzvestaji)
+    {
+        if ( izabraniKljucevi.Count == 0 || izabraniIzvestaji.Count == 0)
         {
-            _koordinator = koordinator;
+            TempData["GreskaPoruka"] = "Молимо изаберите бар један извештај и бар један ЗУ фајл.";
+            return RedirectToAction(nameof(Index));
         }
 
-        [HttpGet]
-        public IActionResult Index()
-        {
-            var sortirano = _koordinator.VratiSortiranuIstorijuZuFajlova();
-            return View(sortirano);
-        }
+        ViewBag.IzabraniKljucevi = string.Join(",", izabraniKljucevi);
+        var model = await _koordinator.PripremiObjedinjeneIzvestajeAsync(izabraniKljucevi, izabraniIzvestaji);
 
-        [HttpPost]
-        public async Task<IActionResult> GenerisiIzvestaj(List<string> izabraniKljucevi, List<string> izabraniIzvestaji)
+        if (izabraniIzvestaji.Count == 1)
         {
-            if (izabraniKljucevi == null || izabraniKljucevi.Count == 0 ||
-                izabraniIzvestaji == null || izabraniIzvestaji.Count == 0)
+            return izabraniIzvestaji[0] switch
             {
-                TempData["GreskaPoruka"] = "Молимо изаберите бар један извештај и бар један ЗУ фајл.";
-                return RedirectToAction(nameof(Index));
-            }
-
-            ViewBag.IzabraniKljucevi = string.Join(",", izabraniKljucevi);
-            var model = await _koordinator.PripremiObjedinjeneIzvestajeAsync(izabraniKljucevi, izabraniIzvestaji);
-
-            if (izabraniIzvestaji.Count == 1)
-            {
-                return izabraniIzvestaji[0] switch
-                {
-                    "NepronadjeniURfzo" => View("IzvestajNepronadjeni", model.NepronadjeniURfzo),
-                    "NepronadjeniUZu" => View("IzvestajNepronadjeniUZu", model.NepronadjeniUZu),
-                    "NeslaganjeKoeficijenata" => View("IzvestajNeslaganjeKoeficijenata", model.NeslaganjeKoeficijenata),
-                    "PrekovremeniSati" => View("IzvestajPrekovremeniSati", model.PrekovremeniSati),
-                    "Preko65Godina" => View("IzvestajPreko65Godina", model.Preko65Godina),
-                    "NepunoRadnoVreme" => View("IzvestajNepunoRadnoVreme", model.NepunoRadnoVreme),
-                    _ => RedirectToAction(nameof(Index))
-                };
-            }
-
-            return View("SviIzvestaji", model);
+                "NepronadjeniURfzo" => View("IzvestajNepronadjeni", model.NepronadjeniURfzo),
+                "NepronadjeniUZu" => View("IzvestajNepronadjeniUZu", model.NepronadjeniUZu),
+                "NeslaganjeKoeficijenata" => View("IzvestajNeslaganjeKoeficijenata", model.NeslaganjeKoeficijenata),
+                "PrekovremeniSati" => View("IzvestajPrekovremeniSati", model.PrekovremeniSati),
+                "Preko65Godina" => View("IzvestajPreko65Godina", model.Preko65Godina),
+                "NepunoRadnoVreme" => View("IzvestajNepunoRadnoVreme", model.NepunoRadnoVreme),
+                _ => RedirectToAction(nameof(Index))
+            };
         }
+
+        return View("SviIzvestaji", model);
     }
 }
