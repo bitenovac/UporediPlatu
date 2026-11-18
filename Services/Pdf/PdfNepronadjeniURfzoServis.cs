@@ -1,4 +1,4 @@
-using MigraDocCore.DocumentObjectModel;
+using MigraDoc.DocumentObjectModel;
 using UporediPlate.Models;
 
 namespace UporediPlate.Services.Pdf;

@@ -1,6 +1,17 @@
 using Microsoft.EntityFrameworkCore;
+using PdfSharp.Fonts;
 using UporediPlate;
 using UporediPlate.Services;
+
+// Апликација ради искључиво на Windows-у
+if (!OperatingSystem.IsWindows())
+{
+    Console.Error.WriteLine("Апликација UporediPlate може да се покрене само на Windows оперативном систему.");
+    return 1;
+}
+
+// PDFsharp користи системске фонтове Windows-а (Arial са ћирилицом)
+GlobalFontSettings.UseWindowsFontsUnderWindows = true;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -38,3 +49,4 @@ app.MapControllerRoute(
     .WithStaticAssets();
 
 app.Run();
+return 0;

@@ -1,5 +1,5 @@
-using MigraDocCore.DocumentObjectModel;
-using MigraDocCore.DocumentObjectModel.Tables;
+using MigraDoc.DocumentObjectModel;
+using MigraDoc.DocumentObjectModel.Tables;
 using UporediPlate.Models;
 
 namespace UporediPlate.Services.Pdf;

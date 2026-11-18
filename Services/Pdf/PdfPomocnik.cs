@@ -1,7 +1,7 @@
 using System.IO.Compression;
-using MigraDocCore.DocumentObjectModel;
-using MigraDocCore.DocumentObjectModel.Tables;
-using MigraDocCore.Rendering;
+using MigraDoc.DocumentObjectModel;
+using MigraDoc.DocumentObjectModel.Tables;
+using MigraDoc.Rendering;
 
 namespace UporediPlate.Services.Pdf;
 
@@ -14,7 +14,7 @@ public class PdfPomocnik
     {
         var doc = new Document();
 
-        var normalStyle = doc.Styles["Normal"];
+        var normalStyle = doc.Styles[StyleNames.Normal]!;
         normalStyle.Font.Name = "Arial";
         normalStyle.Font.Size = 8.5;
 
@@ -88,7 +88,7 @@ public class PdfPomocnik
         footer.AddText(" од ");
         footer.AddNumPagesField();
 
-        var pdfRenderer = new PdfDocumentRenderer(true);
+        var pdfRenderer = new PdfDocumentRenderer();
         pdfRenderer.Document = doc;
         pdfRenderer.RenderDocument();
 
