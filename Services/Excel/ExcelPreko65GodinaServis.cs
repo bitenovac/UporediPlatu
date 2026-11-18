@@ -1,5 +1,6 @@
 using ClosedXML.Excel;
 using UporediPlate.Models;
+using UporediPlate.Services.Izvestaji;
 
 namespace UporediPlate.Services.Excel;
 
@@ -25,7 +26,7 @@ public class ExcelPreko65GodinaServis
         {
             var prvi = grupa.First();
             var nazivLista = _pomocnik.OcistiNazivLista(
-                string.IsNullOrWhiteSpace(prvi.SifraZuOriginal) ? grupa.Key : prvi.SifraZuOriginal);
+                IzvestajPomocnik.SifraZaPrikaz(prvi.SifraZuOriginal, grupa.Key));
 
             var ws = workbook.Worksheets.Add(nazivLista);
             var brojKolona = 11;
@@ -37,22 +38,8 @@ public class ExcelPreko65GodinaServis
                 brojKolona,
                 true);
 
-            var zuRange = ws.Range(2, 1, 2, brojKolona);
-            zuRange.Style.Fill.BackgroundColor = XLColor.FromHtml("#198754");
-            zuRange.Style.Font.FontColor = XLColor.White;
-            zuRange.Style.Font.Bold = true;
-
-            var statusRow = 3;
-            var statusRange = ws.Range(statusRow, 1, statusRow, brojKolona);
-            statusRange.Merge();
-            statusRange.Value =
-                "Напомена: Црвеним словима су означени запослени који у обрачунском месецу пуне 65 година живота.";
-            statusRange.Style.Fill.BackgroundColor = XLColor.FromHtml("#FFC107");
-            statusRange.Style.Font.FontColor = XLColor.FromHtml("#212529");
-            statusRange.Style.Font.Bold = true;
-            statusRange.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Left;
-            statusRange.Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
-            ws.Row(statusRow).Height = 22;
+            _pomocnik.PrimeniStatusnuTraku(ws, 3, brojKolona,
+                "Напомена: Црвеним словима су означени запослени који у обрачунском месецу пуне 65 година живота.");
 
             var headerRow = 4;
             string[] kolone =
@@ -77,10 +64,7 @@ public class ExcelPreko65GodinaServis
                 ws.Cell(trenutniRed, 1).Value = item.PeriodUvoza.ToString("MM.yyyy");
                 ws.Cell(trenutniRed, 1).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
 
-                var jmbgCell = ws.Cell(trenutniRed, 2);
-                jmbgCell.SetValue(item.Jmbg);
-                jmbgCell.Style.NumberFormat.Format = "@";
-                jmbgCell.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+                _pomocnik.UpisiJmbg(ws.Cell(trenutniRed, 2), item.Jmbg);
 
                 ws.Cell(trenutniRed, 3).Value = item.Ime;
                 ws.Cell(trenutniRed, 4).Value = item.Prezime;
@@ -88,29 +72,17 @@ public class ExcelPreko65GodinaServis
                 ws.Cell(trenutniRed, 5).Value = item.DatumRodjenja.ToString("dd.MM.yyyy");
                 ws.Cell(trenutniRed, 5).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
 
-                ws.Cell(trenutniRed, 6).Value = item.RedovanRad;
-                ws.Cell(trenutniRed, 6).Style.NumberFormat.Format = "#,##0.00";
-                ws.Cell(trenutniRed, 6).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Right;
+                _pomocnik.UpisiBroj(ws.Cell(trenutniRed, 6), item.RedovanRad);
 
-                ws.Cell(trenutniRed, 7).Value = item.PrekovremeniSati;
-                ws.Cell(trenutniRed, 7).Style.NumberFormat.Format = "#,##0.00";
-                ws.Cell(trenutniRed, 7).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Right;
+                _pomocnik.UpisiBroj(ws.Cell(trenutniRed, 7), item.PrekovremeniSati);
 
-                ws.Cell(trenutniRed, 8).Value = item.DezurstvoSati;
-                ws.Cell(trenutniRed, 8).Style.NumberFormat.Format = "#,##0.00";
-                ws.Cell(trenutniRed, 8).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Right;
+                _pomocnik.UpisiBroj(ws.Cell(trenutniRed, 8), item.DezurstvoSati);
 
-                ws.Cell(trenutniRed, 9).Value = item.PoPozivuSati;
-                ws.Cell(trenutniRed, 9).Style.NumberFormat.Format = "#,##0.00";
-                ws.Cell(trenutniRed, 9).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Right;
+                _pomocnik.UpisiBroj(ws.Cell(trenutniRed, 9), item.PoPozivuSati);
 
-                ws.Cell(trenutniRed, 10).Value = item.PripravnostSati;
-                ws.Cell(trenutniRed, 10).Style.NumberFormat.Format = "#,##0.00";
-                ws.Cell(trenutniRed, 10).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Right;
+                _pomocnik.UpisiBroj(ws.Cell(trenutniRed, 10), item.PripravnostSati);
 
-                ws.Cell(trenutniRed, 11).Value = item.UkupanNeto;
-                ws.Cell(trenutniRed, 11).Style.NumberFormat.Format = "#,##0.00";
-                ws.Cell(trenutniRed, 11).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Right;
+                _pomocnik.UpisiBroj(ws.Cell(trenutniRed, 11), item.UkupanNeto);
                 ws.Cell(trenutniRed, 11).Style.Font.Bold = true;
 
                 _pomocnik.StilizujRedPodataka(ws, trenutniRed, brojKolona);

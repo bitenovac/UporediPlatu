@@ -1,5 +1,6 @@
 using ClosedXML.Excel;
 using UporediPlate.Models;
+using UporediPlate.Services.Izvestaji;
 
 namespace UporediPlate.Services.Excel;
 
@@ -25,7 +26,7 @@ public class ExcelPrekovremeniSatiServis
         {
             var prvi = grupa.First();
             var nazivLista = _pomocnik.OcistiNazivLista(
-                string.IsNullOrWhiteSpace(prvi.SifraZuOriginal) ? grupa.Key : prvi.SifraZuOriginal);
+                IzvestajPomocnik.SifraZaPrikaz(prvi.SifraZuOriginal, grupa.Key));
 
             var ws = workbook.Worksheets.Add(nazivLista);
             var brojKolona = 10;
@@ -37,22 +38,8 @@ public class ExcelPrekovremeniSatiServis
                 brojKolona,
                 true);
 
-            var zuRange = ws.Range(2, 1, 2, brojKolona);
-            zuRange.Style.Fill.BackgroundColor = XLColor.FromHtml("#198754");
-            zuRange.Style.Font.FontColor = XLColor.White;
-            zuRange.Style.Font.Bold = true;
-
-            var statusRow = 3;
-            var statusRange = ws.Range(statusRow, 1, statusRow, brojKolona);
-            statusRange.Merge();
-            statusRange.Value =
-                "Приказ запослених из ЗУ евиденције код којих је збир додатних сати већи од нуле (сортирано опадајуће)";
-            statusRange.Style.Fill.BackgroundColor = XLColor.FromHtml("#FFC107");
-            statusRange.Style.Font.FontColor = XLColor.FromHtml("#212529");
-            statusRange.Style.Font.Bold = true;
-            statusRange.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Left;
-            statusRange.Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
-            ws.Row(statusRow).Height = 22;
+            _pomocnik.PrimeniStatusnuTraku(ws, 3, brojKolona,
+                "Приказ запослених из ЗУ евиденције код којих је збир додатних сати већи од нуле (сортирано опадајуће)");
 
             var headerRow = 4;
             string[] kolone =
@@ -73,10 +60,7 @@ public class ExcelPrekovremeniSatiServis
             var trenutniRed = headerRow + 1;
             foreach (var item in grupa)
             {
-                var jmbgCell = ws.Cell(trenutniRed, 1);
-                jmbgCell.SetValue(item.Jmbg);
-                jmbgCell.Style.NumberFormat.Format = "@";
-                jmbgCell.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+                _pomocnik.UpisiJmbg(ws.Cell(trenutniRed, 1), item.Jmbg);
 
                 ws.Cell(trenutniRed, 2).Value = item.Ime;
                 ws.Cell(trenutniRed, 3).Value = item.Prezime;
@@ -85,30 +69,18 @@ public class ExcelPrekovremeniSatiServis
                 rmCell.Value = item.RadnoMesto;
                 rmCell.Style.Alignment.WrapText = true;
 
-                ws.Cell(trenutniRed, 5).Value = item.PrekovremeniSati;
-                ws.Cell(trenutniRed, 5).Style.NumberFormat.Format = "#,##0.00";
-                ws.Cell(trenutniRed, 5).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Right;
+                _pomocnik.UpisiBroj(ws.Cell(trenutniRed, 5), item.PrekovremeniSati);
 
-                ws.Cell(trenutniRed, 6).Value = item.DezurstvoSati;
-                ws.Cell(trenutniRed, 6).Style.NumberFormat.Format = "#,##0.00";
-                ws.Cell(trenutniRed, 6).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Right;
+                _pomocnik.UpisiBroj(ws.Cell(trenutniRed, 6), item.DezurstvoSati);
 
-                ws.Cell(trenutniRed, 7).Value = item.PoPozivuSati;
-                ws.Cell(trenutniRed, 7).Style.NumberFormat.Format = "#,##0.00";
-                ws.Cell(trenutniRed, 7).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Right;
+                _pomocnik.UpisiBroj(ws.Cell(trenutniRed, 7), item.PoPozivuSati);
 
-                ws.Cell(trenutniRed, 8).Value = item.PripravnostSati;
-                ws.Cell(trenutniRed, 8).Style.NumberFormat.Format = "#,##0.00";
-                ws.Cell(trenutniRed, 8).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Right;
+                _pomocnik.UpisiBroj(ws.Cell(trenutniRed, 8), item.PripravnostSati);
 
-                ws.Cell(trenutniRed, 9).Value = item.UkupnoDodatnihSati;
-                ws.Cell(trenutniRed, 9).Style.NumberFormat.Format = "#,##0.00";
-                ws.Cell(trenutniRed, 9).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Right;
+                _pomocnik.UpisiBroj(ws.Cell(trenutniRed, 9), item.UkupnoDodatnihSati);
                 ws.Cell(trenutniRed, 9).Style.Font.Bold = true;
 
-                ws.Cell(trenutniRed, 10).Value = item.RadnoVreme;
-                ws.Cell(trenutniRed, 10).Style.NumberFormat.Format = "#,##0.00";
-                ws.Cell(trenutniRed, 10).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Right;
+                _pomocnik.UpisiBroj(ws.Cell(trenutniRed, 10), item.RadnoVreme);
 
                 _pomocnik.StilizujRedPodataka(ws, trenutniRed, brojKolona);
                 ws.Row(trenutniRed).Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;

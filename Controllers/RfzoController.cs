@@ -63,23 +63,13 @@ public class RfzoController : Controller
     {
         try
         {
-            if (string.IsNullOrEmpty(vremeKljuc) || vremeKljuc.Length < 14)
+            if (!VremenskiKljuc.PokusajParsiranje(vremeKljuc, out var pocetakSekunde))
             {
                 return RedirectToAction(nameof(Index));
             }
 
-            var godina = int.Parse(vremeKljuc.Substring(0, 4));
-            var mesec = int.Parse(vremeKljuc.Substring(4, 2));
-            var dan = int.Parse(vremeKljuc.Substring(6, 2));
-            var sat = int.Parse(vremeKljuc.Substring(8, 2));
-            var minut = int.Parse(vremeKljuc.Substring(10, 2));
-            var sekund = int.Parse(vremeKljuc.Substring(12, 2));
-
-            var pocetakSekunde = new DateTime(godina, mesec, dan, sat, minut, sekund);
-            var krajSekunde = pocetakSekunde.AddSeconds(1);
-
             var radnici = _context.RfzoUvozi
-                .Where(x => x.DatumUvozaPodataka >= pocetakSekunde && x.DatumUvozaPodataka < krajSekunde)
+                .IzUvoza(pocetakSekunde)
                 .OrderBy(x => x.Prezime)
                 .ThenBy(x => x.Ime)
                 .ToList();

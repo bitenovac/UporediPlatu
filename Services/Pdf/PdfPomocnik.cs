@@ -7,6 +7,36 @@ namespace UporediPlate.Services.Pdf;
 
 public class PdfPomocnik
 {
+    private static readonly Color ZutaBoja = new(255, 193, 7); // #FFC107
+    private static readonly Color TamniTekst = new(33, 37, 41); // #212529
+
+    // Жута трака са напоменом/разлогом испод заглавља документа
+    public void DodajStatusnuTraku(Section section, string tekst)
+    {
+        var statusPar = section.AddParagraph();
+        statusPar.Format.Shading.Color = ZutaBoja;
+        statusPar.Format.Font.Color = TamniTekst;
+        statusPar.Format.Font.Bold = true;
+        statusPar.Format.Font.Size = 8.5;
+        statusPar.Format.LeftIndent = Unit.FromPoint(4);
+        statusPar.Format.RightIndent = Unit.FromPoint(4);
+        statusPar.Format.SpaceBefore = Unit.FromPoint(0);
+        statusPar.Format.SpaceAfter = Unit.FromPoint(6);
+        statusPar.Format.Borders.Top.Width = 4;
+        statusPar.Format.Borders.Top.Color = ZutaBoja;
+        statusPar.Format.Borders.Bottom.Width = 4;
+        statusPar.Format.Borders.Bottom.Color = ZutaBoja;
+        statusPar.AddText(tekst);
+    }
+
+    // Број са две децимале, поравнат десно
+    public Paragraph DodajBroj(Cell cell, decimal vrednost)
+    {
+        var paragraph = cell.AddParagraph(vrednost.ToString("N2"));
+        paragraph.Format.Alignment = ParagraphAlignment.Right;
+        return paragraph;
+    }
+
     public Document KreirajOsnovniDokument(out Section section,
         string glavniNaslov,
         string podnaslovZu,

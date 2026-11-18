@@ -55,7 +55,7 @@ public class UvozRfzoServis
 
     public async Task<(bool Uspeh, string Poruka)> ObradiRfzoExcel(IFormFile excelFajl, DateTime period)
     {
-        if (excelFajl == null || excelFajl.Length == 0)
+        if (excelFajl.Length == 0)
         {
             return (false, "Фајл није изабран или је празан.");
         }
@@ -71,203 +71,201 @@ public class UvozRfzoServis
 
         try
         {
-            using (var stream = new MemoryStream())
+            using var stream = new MemoryStream();
+            await excelFajl.CopyToAsync(stream);
+            stream.Position = 0;
+
+            using var reader = ExcelReaderFactory.CreateReader(stream);
+            var result = reader.AsDataSet(new ExcelDataSetConfiguration
             {
-                await excelFajl.CopyToAsync(stream);
-                stream.Position = 0;
+                ConfigureDataTable = _ => new ExcelDataTableConfiguration { UseHeaderRow = true }
+            });
 
-                using (var reader = ExcelReaderFactory.CreateReader(stream))
+            if (result.Tables.Count == 0)
+            {
+                return (false, "Изабрани Excel фајл не садржи табеле.");
+            }
+
+            var izvornaTabela = result.Tables[0];
+
+            var dtZaBazu = new DataTable();
+            dtZaBazu.Columns.Add("Jmbg", typeof(string));
+            dtZaBazu.Columns.Add("Lbo", typeof(string));
+            dtZaBazu.Columns.Add("Prezime", typeof(string));
+            dtZaBazu.Columns.Add("Ime", typeof(string));
+            dtZaBazu.Columns.Add("NazivSpreme", typeof(string));
+            dtZaBazu.Columns.Add("NazivSpecijalnosti", typeof(string));
+            dtZaBazu.Columns.Add("NazivSubSpecijalnosti", typeof(string));
+            dtZaBazu.Columns.Add("NazivZvanja", typeof(string));
+            dtZaBazu.Columns.Add("DatumZaposlenja", typeof(DateTime)).AllowDBNull = true;
+            dtZaBazu.Columns.Add("NazivZanimanja", typeof(string));
+            dtZaBazu.Columns.Add("NazivRV", typeof(string));
+            dtZaBazu.Columns.Add("NazivRukovodioc", typeof(string));
+            dtZaBazu.Columns.Add("NazivZZ", typeof(string));
+            dtZaBazu.Columns.Add("NazivRM", typeof(string));
+            dtZaBazu.Columns.Add("Koef1", typeof(decimal)).AllowDBNull = true;
+            dtZaBazu.Columns.Add("DodKzaRuk", typeof(decimal)).AllowDBNull = true;
+            dtZaBazu.Columns.Add("DodKzaSiNzv", typeof(decimal)).AllowDBNull = true;
+            dtZaBazu.Columns.Add("Dodatni036", typeof(decimal)).AllowDBNull = true;
+            dtZaBazu.Columns.Add("UkrsG", typeof(decimal)).AllowDBNull = true;
+            dtZaBazu.Columns.Add("UkrsM", typeof(decimal)).AllowDBNull = true;
+            dtZaBazu.Columns.Add("NapRadnik", typeof(string));
+            dtZaBazu.Columns.Add("NapRz", typeof(string));
+            dtZaBazu.Columns.Add("ProcRVr", typeof(int)).AllowDBNull = true;
+            dtZaBazu.Columns.Add("NazivOJ", typeof(string));
+            dtZaBazu.Columns.Add("SifraZu", typeof(string));
+            dtZaBazu.Columns.Add("NazivZU", typeof(string));
+            dtZaBazu.Columns.Add("PovecanjeId", typeof(int)).AllowDBNull = true;
+            dtZaBazu.Columns.Add("DatumKapitacija", typeof(DateTime)).AllowDBNull = true;
+            dtZaBazu.Columns.Add("DatumPrestankaRO", typeof(DateTime)).AllowDBNull = true;
+            dtZaBazu.Columns.Add("NaSpecijalizaciji", typeof(int)).AllowDBNull = true;
+            dtZaBazu.Columns.Add("PeriodUvoza", typeof(DateTime));
+            dtZaBazu.Columns.Add("DatumUvozaPodataka", typeof(DateTime));
+            dtZaBazu.Columns.Add("NazivFajla", typeof(string));
+
+            foreach (DataRow red in izvornaTabela.Rows)
+            {
+                if (izvornaTabela.Columns.Count < 4)
                 {
-                    var result = reader.AsDataSet(new ExcelDataSetConfiguration
-                    {
-                        ConfigureDataTable = _ => new ExcelDataTableConfiguration { UseHeaderRow = true }
-                    });
+                    continue;
+                }
 
-                    if (result.Tables.Count == 0)
+                var siroviJmbg = "";
+                var jmbgObj = red[0];
+                if (jmbgObj != DBNull.Value)
+                {
+                    var jmbgDec = ExcelVrednosti.DekodirajDecimal(jmbgObj);
+                    if (jmbgDec.HasValue)
                     {
-                        return (false, "Изабрани Excel фајл не садржи табеле.");
+                        siroviJmbg = Math.Truncate(jmbgDec.Value).ToString(CultureInfo.InvariantCulture);
+                    }
+                    else
+                    {
+                        siroviJmbg = jmbgObj.ToString()?.Trim() ?? "";
+                    }
+                }
+
+                if (siroviJmbg.Length == 12)
+                {
+                    siroviJmbg = "0" + siroviJmbg;
+                }
+
+                if (string.IsNullOrEmpty(siroviJmbg) || siroviJmbg.ToLower().Contains("jmbg") ||
+                    siroviJmbg.Length < 13)
+                {
+                    continue;
+                }
+
+                var siroviLbo = "";
+                var lboObj = red[1];
+                if ( lboObj != DBNull.Value)
+                {
+                    var lboDec = ExcelVrednosti.DekodirajDecimal(lboObj);
+                    if (lboDec.HasValue)
+                    {
+                        siroviLbo = Math.Truncate(lboDec.Value).ToString(CultureInfo.InvariantCulture);
+                    }
+                    else
+                    {
+                        siroviLbo = lboObj.ToString()?.Trim() ?? "";
+                    }
+                }
+
+                dtZaBazu.Rows.Add(
+                    siroviJmbg,
+                    siroviLbo,
+                    ProcitajKolonu(2, "string"),
+                    ProcitajKolonu(3, "string"),
+                    ProcitajKolonu(4, "string"),
+                    ProcitajKolonu(5, "string"),
+                    ProcitajKolonu(6, "string"),
+                    ProcitajKolonu(7, "string"),
+                    ProcitajKolonu(8, "datum"),
+                    ProcitajKolonu(9, "string"),
+                    ProcitajKolonu(10, "string"),
+                    ProcitajKolonu(11, "string"),
+                    ProcitajKolonu(12, "string"),
+                    ProcitajKolonu(13, "string"),
+                    ProcitajKolonu(14, "decimal"),
+                    ProcitajKolonu(15, "decimal"),
+                    ProcitajKolonu(16, "decimal"),
+                    ProcitajKolonu(17, "decimal"),
+                    ProcitajKolonu(18, "decimal"),
+                    ProcitajKolonu(19, "decimal"),
+                    ProcitajKolonu(20, "string"),
+                    ProcitajKolonu(21, "string"),
+                    ProcitajKolonu(22, "int"),
+                    ProcitajKolonu(23, "string"),
+                    ProcitajKolonu(24, "string"),
+                    ProcitajKolonu(25, "string"),
+                    ProcitajKolonu(26, "int"),
+                    ProcitajKolonu(27, "datum"),
+                    ProcitajKolonu(28, "datum"),
+                    ProcitajKolonu(29, "int"),
+                    period,
+                    trenutnoVremeUvoza,
+                    excelFajl.FileName
+                );
+                continue;
+
+                object ProcitajKolonu(int indeks, string tip)
+                {
+                    if (izvornaTabela.Columns.Count <= indeks)
+                    {
+                        return DBNull.Value;
                     }
 
-                    var izvornaTabela = result.Tables[0];
-
-                    var dtZaBazu = new DataTable();
-                    dtZaBazu.Columns.Add("Jmbg", typeof(string));
-                    dtZaBazu.Columns.Add("Lbo", typeof(string));
-                    dtZaBazu.Columns.Add("Prezime", typeof(string));
-                    dtZaBazu.Columns.Add("Ime", typeof(string));
-                    dtZaBazu.Columns.Add("NazivSpreme", typeof(string));
-                    dtZaBazu.Columns.Add("NazivSpecijalnosti", typeof(string));
-                    dtZaBazu.Columns.Add("NazivSubSpecijalnosti", typeof(string));
-                    dtZaBazu.Columns.Add("NazivZvanja", typeof(string));
-                    dtZaBazu.Columns.Add("DatumZaposlenja", typeof(DateTime)).AllowDBNull = true;
-                    dtZaBazu.Columns.Add("NazivZanimanja", typeof(string));
-                    dtZaBazu.Columns.Add("NazivRV", typeof(string));
-                    dtZaBazu.Columns.Add("NazivRukovodioc", typeof(string));
-                    dtZaBazu.Columns.Add("NazivZZ", typeof(string));
-                    dtZaBazu.Columns.Add("NazivRM", typeof(string));
-                    dtZaBazu.Columns.Add("Koef1", typeof(decimal)).AllowDBNull = true;
-                    dtZaBazu.Columns.Add("DodKzaRuk", typeof(decimal)).AllowDBNull = true;
-                    dtZaBazu.Columns.Add("DodKzaSiNzv", typeof(decimal)).AllowDBNull = true;
-                    dtZaBazu.Columns.Add("Dodatni036", typeof(decimal)).AllowDBNull = true;
-                    dtZaBazu.Columns.Add("UkrsG", typeof(decimal)).AllowDBNull = true;
-                    dtZaBazu.Columns.Add("UkrsM", typeof(decimal)).AllowDBNull = true;
-                    dtZaBazu.Columns.Add("NapRadnik", typeof(string));
-                    dtZaBazu.Columns.Add("NapRz", typeof(string));
-                    dtZaBazu.Columns.Add("ProcRVr", typeof(int)).AllowDBNull = true;
-                    dtZaBazu.Columns.Add("NazivOJ", typeof(string));
-                    dtZaBazu.Columns.Add("SifraZu", typeof(string));
-                    dtZaBazu.Columns.Add("NazivZU", typeof(string));
-                    dtZaBazu.Columns.Add("PovecanjeId", typeof(int)).AllowDBNull = true;
-                    dtZaBazu.Columns.Add("DatumKapitacija", typeof(DateTime)).AllowDBNull = true;
-                    dtZaBazu.Columns.Add("DatumPrestankaRO", typeof(DateTime)).AllowDBNull = true;
-                    dtZaBazu.Columns.Add("NaSpecijalizaciji", typeof(int)).AllowDBNull = true;
-                    dtZaBazu.Columns.Add("PeriodUvoza", typeof(DateTime));
-                    dtZaBazu.Columns.Add("DatumUvozaPodataka", typeof(DateTime));
-                    dtZaBazu.Columns.Add("NazivFajla", typeof(string));
-
-                    foreach (DataRow red in izvornaTabela.Rows)
+                    var val = red[indeks];
+                    if (val == null || val == DBNull.Value || string.IsNullOrWhiteSpace(val.ToString()))
                     {
-                        if (izvornaTabela.Columns.Count < 4)
-                        {
-                            continue;
-                        }
-
-                        var siroviJmbg = "";
-                        var jmbgObj = red[0];
-                        if (jmbgObj != null && jmbgObj != DBNull.Value)
-                        {
-                            var jmbgDec = DekodirajDecimal(jmbgObj);
-                            if (jmbgDec.HasValue)
-                            {
-                                siroviJmbg = Math.Truncate(jmbgDec.Value).ToString(CultureInfo.InvariantCulture);
-                            }
-                            else
-                            {
-                                siroviJmbg = jmbgObj.ToString()?.Trim() ?? "";
-                            }
-                        }
-
-                        if (siroviJmbg.Length == 12)
-                        {
-                            siroviJmbg = "0" + siroviJmbg;
-                        }
-
-                        if (string.IsNullOrEmpty(siroviJmbg) || siroviJmbg.ToLower().Contains("jmbg") ||
-                            siroviJmbg.Length < 13)
-                        {
-                            continue;
-                        }
-
-                        var siroviLbo = "";
-                        var lboObj = red[1];
-                        if (lboObj != null && lboObj != DBNull.Value)
-                        {
-                            var lboDec = DekodirajDecimal(lboObj);
-                            if (lboDec.HasValue)
-                            {
-                                siroviLbo = Math.Truncate(lboDec.Value).ToString(CultureInfo.InvariantCulture);
-                            }
-                            else
-                            {
-                                siroviLbo = lboObj.ToString()?.Trim() ?? "";
-                            }
-                        }
-
-                        object ProcitajKolonu(int indeks, string tip)
-                        {
-                            if (izvornaTabela.Columns.Count <= indeks)
-                            {
-                                return DBNull.Value;
-                            }
-
-                            var val = red[indeks];
-                            if (val == null || val == DBNull.Value || string.IsNullOrWhiteSpace(val.ToString()))
-                            {
-                                return DBNull.Value;
-                            }
-
-                            if (tip == "decimal")
-                            {
-                                var decRez = DekodirajDecimal(val);
-                                return decRez.HasValue ? decRez.Value : DBNull.Value;
-                            }
-
-                            if (tip == "int")
-                            {
-                                var decVal = DekodirajDecimal(val);
-                                return decVal.HasValue ? (object)Convert.ToInt32(Math.Truncate(decVal.Value)) : 0;
-                            }
-
-                            if (tip == "datum")
-                            {
-                                var datRez = KonvertujExcelDatum(val);
-                                return datRez.HasValue ? datRez.Value : DBNull.Value;
-                            }
-
-                            return val.ToString()?.Trim() ?? "";
-                        }
-
-                        dtZaBazu.Rows.Add(
-                            siroviJmbg,
-                            siroviLbo,
-                            ProcitajKolonu(2, "string"),
-                            ProcitajKolonu(3, "string"),
-                            ProcitajKolonu(4, "string"),
-                            ProcitajKolonu(5, "string"),
-                            ProcitajKolonu(6, "string"),
-                            ProcitajKolonu(7, "string"),
-                            ProcitajKolonu(8, "datum"),
-                            ProcitajKolonu(9, "string"),
-                            ProcitajKolonu(10, "string"),
-                            ProcitajKolonu(11, "string"),
-                            ProcitajKolonu(12, "string"),
-                            ProcitajKolonu(13, "string"),
-                            ProcitajKolonu(14, "decimal"),
-                            ProcitajKolonu(15, "decimal"),
-                            ProcitajKolonu(16, "decimal"),
-                            ProcitajKolonu(17, "decimal"),
-                            ProcitajKolonu(18, "decimal"),
-                            ProcitajKolonu(19, "decimal"),
-                            ProcitajKolonu(20, "string"),
-                            ProcitajKolonu(21, "string"),
-                            ProcitajKolonu(22, "int"),
-                            ProcitajKolonu(23, "string"),
-                            ProcitajKolonu(24, "string"),
-                            ProcitajKolonu(25, "string"),
-                            ProcitajKolonu(26, "int"),
-                            ProcitajKolonu(27, "datum"),
-                            ProcitajKolonu(28, "datum"),
-                            ProcitajKolonu(29, "int"),
-                            period,
-                            trenutnoVremeUvoza,
-                            excelFajl.FileName
-                        );
+                        return DBNull.Value;
                     }
 
-                    if (dtZaBazu.Rows.Count > 0)
+                    if (tip == "decimal")
                     {
-                        var stringKonekcije = _context.Database.GetDbConnection().ConnectionString;
-                        using (var konekcija = new SqlConnection(stringKonekcije))
-                        {
-                            await konekcija.OpenAsync();
-                            using (var bulkCopy = new SqlBulkCopy(konekcija))
-                            {
-                                bulkCopy.DestinationTableName = "RfzoUvozi";
-                                foreach (DataColumn col in dtZaBazu.Columns)
-                                {
-                                    bulkCopy.ColumnMappings.Add(col.ColumnName, col.ColumnName);
-                                }
-
-                                await bulkCopy.WriteToServerAsync(dtZaBazu);
-                            }
-                        }
-
-                        return (true, $"Подаци су успешно увезени. Укупно записа: {dtZaBazu.Rows.Count}");
+                        var decRez = ExcelVrednosti.DekodirajDecimal(val);
+                        return decRez.HasValue ? decRez.Value : DBNull.Value;
                     }
 
-                    return (false, "Није пронађен ниједан валидан ред за увоз у фајлу.");
+                    if (tip == "int")
+                    {
+                        var decVal = ExcelVrednosti.DekodirajDecimal(val);
+                        return decVal.HasValue ? (object)Convert.ToInt32(Math.Truncate(decVal.Value)) : 0;
+                    }
+
+                    if (tip == "datum")
+                    {
+                        var datRez = ExcelVrednosti.KonvertujDatum(val);
+                        return datRez.HasValue ? datRez.Value : DBNull.Value;
+                    }
+
+                    return val.ToString()?.Trim() ?? "";
                 }
             }
+
+            if (dtZaBazu.Rows.Count <= 0)
+            {
+                return (false, "Није пронађен ниједан валидан ред за увоз у фајлу.");
+            }
+
+            var stringKonekcije = _context.Database.GetDbConnection().ConnectionString;
+            await using (var konekcija = new SqlConnection(stringKonekcije))
+            {
+                await konekcija.OpenAsync();
+                using (var bulkCopy = new SqlBulkCopy(konekcija))
+                {
+                    bulkCopy.DestinationTableName = "RfzoUvozi";
+                    foreach (DataColumn col in dtZaBazu.Columns)
+                    {
+                        bulkCopy.ColumnMappings.Add(col.ColumnName, col.ColumnName);
+                    }
+
+                    await bulkCopy.WriteToServerAsync(dtZaBazu);
+                }
+            }
+
+            return (true, $"Подаци су успешно увезени. Укупно записа: {dtZaBazu.Rows.Count}");
+
         }
         catch (Exception ex)
         {
@@ -276,83 +274,17 @@ public class UvozRfzoServis
         }
     }
 
-    private static decimal? DekodirajDecimal(object? obj)
-    {
-        if (obj == null || obj == DBNull.Value)
-        {
-            return null;
-        }
-
-        if (obj is double d)
-        {
-            return Convert.ToDecimal(d);
-        }
-
-        if (obj is decimal dec)
-        {
-            return dec;
-        }
-
-        if (obj is float f)
-        {
-            return Convert.ToDecimal(f);
-        }
-
-        if (obj is int i)
-        {
-            return i;
-        }
-
-        if (obj is long l)
-        {
-            return l;
-        }
-
-        var tekst = obj.ToString()?.Trim() ?? "";
-        if (string.IsNullOrWhiteSpace(tekst))
-        {
-            return null;
-        }
-
-        tekst = tekst.Replace(" ", "");
-        if (tekst.Contains('.') && tekst.Contains(','))
-        {
-            if (tekst.LastIndexOf(',') > tekst.LastIndexOf('.'))
-            {
-                tekst = tekst.Replace(".", "").Replace(",", ".");
-            }
-            else
-            {
-                tekst = tekst.Replace(",", "");
-            }
-        }
-        else if (tekst.Contains(','))
-        {
-            tekst = tekst.Replace(",", ".");
-        }
-
-        return decimal.TryParse(tekst, NumberStyles.Any, CultureInfo.InvariantCulture, out var rez) ? rez : null;
-    }
-
     public async Task<(bool Uspeh, string Poruka)> ObrisiUvoz(string vremeKljuc)
     {
         try
         {
-            if (string.IsNullOrEmpty(vremeKljuc) || vremeKljuc.Length < 14)
+            if (!VremenskiKljuc.PokusajParsiranje(vremeKljuc, out var pocetakSekunde))
             {
                 return (false, "Неисправан временски кључ.");
             }
 
-            var godina = int.Parse(vremeKljuc.Substring(0, 4));
-            var mesec = int.Parse(vremeKljuc.Substring(4, 2));
-            var dan = int.Parse(vremeKljuc.Substring(6, 2));
-            var sat = int.Parse(vremeKljuc.Substring(8, 2));
-            var minut = int.Parse(vremeKljuc.Substring(10, 2));
-            var sekund = int.Parse(vremeKljuc.Substring(12, 2));
-            var pocetakSekunde = new DateTime(godina, mesec, dan, sat, minut, sekund);
-            var krajSekunde = pocetakSekunde.AddSeconds(1);
             var zaBrisanje = _context.RfzoUvozi
-                .Where(x => x.DatumUvozaPodataka >= pocetakSekunde && x.DatumUvozaPodataka < krajSekunde)
+                .IzUvoza(pocetakSekunde)
                 .ToList();
             if (zaBrisanje.Any())
             {
@@ -368,52 +300,5 @@ public class UvozRfzoServis
             _logger.LogError(ex, "Грешка приликом брисања унутар сервиса.");
             return (false, $"Грешка приликом брисања: {ex.Message}");
         }
-    }
-
-    private DateTime? KonvertujExcelDatum(object obj)
-    {
-        if (obj == null || string.IsNullOrWhiteSpace(obj.ToString()))
-        {
-            return null;
-        }
-
-        if (obj is DateTime dt)
-        {
-            return dt;
-        }
-
-        var strVal = obj.ToString()!.Trim();
-        if (strVal.Contains(".") || strVal.Contains("-"))
-        {
-            if (DateTime.TryParse(strVal, out var regularanDatum))
-            {
-                return regularanDatum;
-            }
-
-            if (DateTime.TryParseExact(strVal, new[] { "dd.MM.yyyy", "d.M.yyyy", "dd.MM.yyyy.", "yyyy-MM-dd" },
-                    CultureInfo.InvariantCulture, DateTimeStyles.None, out var specDatum))
-            {
-                return specDatum;
-            }
-        }
-
-        var brojDana = DekodirajDecimal(obj);
-        if (brojDana.HasValue)
-        {
-            try
-            {
-                var dDana = Convert.ToDouble(brojDana.Value);
-                if (dDana > 1 && dDana < 2958465)
-                {
-                    return DateTime.FromOADate(dDana);
-                }
-            }
-            catch
-            {
-                return null;
-            }
-        }
-
-        return null;
     }
 }

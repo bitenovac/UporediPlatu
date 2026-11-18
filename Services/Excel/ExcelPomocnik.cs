@@ -46,6 +46,35 @@ public class ExcelPomocnik
         ws.Row(2).Height = 22;
     }
 
+    // Жута трака са напоменом/разлогом испод заглавља листа
+    public void PrimeniStatusnuTraku(IXLWorksheet ws, int red, int brojKolona, string tekst)
+    {
+        var statusRange = ws.Range(red, 1, red, brojKolona);
+        statusRange.Merge();
+        statusRange.Value = tekst;
+        statusRange.Style.Fill.BackgroundColor = XLColor.FromHtml("#FFC107");
+        statusRange.Style.Font.FontColor = XLColor.FromHtml("#212529");
+        statusRange.Style.Font.Bold = true;
+        statusRange.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Left;
+        statusRange.Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
+        ws.Row(red).Height = 22;
+    }
+
+    // ЈМБГ се уписује као текст да Excel не би одсекао водећу нулу
+    public void UpisiJmbg(IXLCell cell, string jmbg)
+    {
+        cell.SetValue(jmbg);
+        cell.Style.NumberFormat.Format = "@";
+        cell.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+    }
+
+    public void UpisiBroj(IXLCell cell, XLCellValue vrednost)
+    {
+        cell.Value = vrednost;
+        cell.Style.NumberFormat.Format = "#,##0.00";
+        cell.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Right;
+    }
+
     public void PrimeniZaglavljeTabele(IXLWorksheet ws,
         int headerRow,
         string[] kolone)

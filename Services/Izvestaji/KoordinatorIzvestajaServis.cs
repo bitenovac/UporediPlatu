@@ -48,7 +48,7 @@ public class KoordinatorIzvestajaServis
                     PeriodUvoza = Convert.ToDateTime(red["PeriodUvoza"]),
                     DatumUvozaPodataka = dtUvoza,
                     BrojRedova = Convert.ToInt32(red["BrojRedova"]),
-                    VremeKljuc = dtUvoza.ToString("yyyyMMddHHmmss")
+                    VremeKljuc = VremenskiKljuc.Formiraj(dtUvoza)
                 });
             }
         }

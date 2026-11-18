@@ -1,6 +1,7 @@
 using MigraDoc.DocumentObjectModel;
 using MigraDoc.DocumentObjectModel.Tables;
 using UporediPlate.Models;
+using UporediPlate.Services.Izvestaji;
 
 namespace UporediPlate.Services.Pdf;
 
@@ -22,9 +23,7 @@ public class PdfNepunoRadnoVremeServis
 
         return _pomocnik.SpakujPdfIliZip(
             grupePoZu,
-            grupa => string.IsNullOrWhiteSpace(grupa.First().SifraZuOriginal)
-                ? grupa.Key
-                : grupa.First().SifraZuOriginal,
+            grupa => IzvestajPomocnik.SifraZaPrikaz(grupa.First().SifraZuOriginal, grupa.Key),
             KreirajPdfZaUstanovu,
             "Izvestaj_Nepuno_Radno_Vreme",
             "Izvestaji_Nepuno_Radno_Vreme_PDF");
@@ -39,24 +38,9 @@ public class PdfNepunoRadnoVremeServis
             $"Шифра ЗУ: {prvi.SifraZuOriginal} ({prvi.SifraZuNormalizovana}) | Назив ЗУ: {prvi.NazivZu} | Број радника: {stavke.Count}",
             true);
 
-        var zutaBoja = new Color(255, 193, 7); // #FFC107
-        var tamniTekst = new Color(33, 37, 41); // #212529
         var crvenaBoja = new Color(220, 53, 69); // #DC3545
 
-        var statusPar = section.AddParagraph();
-        statusPar.Format.Shading.Color = zutaBoja;
-        statusPar.Format.Font.Color = tamniTekst;
-        statusPar.Format.Font.Bold = true;
-        statusPar.Format.Font.Size = 8.5;
-        statusPar.Format.LeftIndent = Unit.FromPoint(4);
-        statusPar.Format.RightIndent = Unit.FromPoint(4);
-        statusPar.Format.SpaceBefore = Unit.FromPoint(0);
-        statusPar.Format.SpaceAfter = Unit.FromPoint(6);
-        statusPar.Format.Borders.Top.Width = 4;
-        statusPar.Format.Borders.Top.Color = zutaBoja;
-        statusPar.Format.Borders.Bottom.Width = 4;
-        statusPar.Format.Borders.Bottom.Color = zutaBoja;
-        statusPar.AddText(
+        _pomocnik.DodajStatusnuTraku(section,
             "Напомена: Црвеним фонтом су истакнути запослени код којих су сати редовног рада већи од максимално дозвољеног фонда.");
 
         var table = _pomocnik.KreirajTabeluSaZaglavljem(
@@ -103,10 +87,10 @@ public class PdfNepunoRadnoVremeServis
 
             row.Cells[6].AddParagraph(item.MaksimalnoDozvoljeniSati.ToString("N2")).Format.Alignment =
                 ParagraphAlignment.Right;
-            row.Cells[7].AddParagraph(item.RedovanRadZu.ToString("N2")).Format.Alignment = ParagraphAlignment.Right;
+            _pomocnik.DodajBroj(row.Cells[7], item.RedovanRadZu);
             row.Cells[8].AddParagraph(item.PrekovremeniSatiZu.ToString("N2")).Format.Alignment =
                 ParagraphAlignment.Right;
-            row.Cells[9].AddParagraph(item.DezurstvoSatiZu.ToString("N2")).Format.Alignment = ParagraphAlignment.Right;
+            _pomocnik.DodajBroj(row.Cells[9], item.DezurstvoSatiZu);
 
             var netoPar = row.Cells[10].AddParagraph(item.UkupanNetoZu.ToString("N2"));
             netoPar.Format.Alignment = ParagraphAlignment.Right;

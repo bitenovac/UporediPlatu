@@ -123,7 +123,7 @@
                     {
                         var dtPeriod = Convert.ToDateTime(red["PeriodUvoza"]);
                         var dtUvoza = Convert.ToDateTime(red["DatumUvozaPodataka"]);
-                        var kljucVreme = dtUvoza.ToString("yyyyMMddHHmmss");
+                        var kljucVreme = VremenskiKljuc.Formiraj(dtUvoza);
 
                         <tr>
                             <!-- 1. Колона: Назив фајла -->

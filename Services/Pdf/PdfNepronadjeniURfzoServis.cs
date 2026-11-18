@@ -1,5 +1,6 @@
 using MigraDoc.DocumentObjectModel;
 using UporediPlate.Models;
+using UporediPlate.Services.Izvestaji;
 
 namespace UporediPlate.Services.Pdf;
 
@@ -20,9 +21,7 @@ public class PdfNepronadjeniURfzoServis
 
         return _pomocnik.SpakujPdfIliZip(
             grupePoZu,
-            grupa => string.IsNullOrWhiteSpace(grupa.First().SifraZuOriginal)
-                ? grupa.Key
-                : grupa.First().SifraZuOriginal,
+            grupa => IzvestajPomocnik.SifraZaPrikaz(grupa.First().SifraZuOriginal, grupa.Key),
             KreirajPdfZaUstanovu,
             "Izvestaj_Nepronadjeni_U_RFZO",
             "Izvestaji_Nepronadjeni_U_RFZO_PDF");
@@ -37,24 +36,10 @@ public class PdfNepronadjeniURfzoServis
             $"Шифра ЗУ: {prvi.SifraZuOriginal} ({prvi.SifraZuNormalizovana}) | Назив ЗУ: {prvi.NazivZu} | Број радника: {stavke.Count}",
             false);
 
-        var zutaBoja = new Color(255, 193, 7); // #FFC107
-        var tamniTekst = new Color(33, 37, 41); // #212529
 
         // Жута трака са разлогом неслагања
-        var statusPar = section.AddParagraph();
-        statusPar.Format.Shading.Color = zutaBoja;
-        statusPar.Format.Font.Color = tamniTekst;
-        statusPar.Format.Font.Bold = true;
-        statusPar.Format.Font.Size = 8.5;
-        statusPar.Format.LeftIndent = Unit.FromPoint(4);
-        statusPar.Format.RightIndent = Unit.FromPoint(4);
-        statusPar.Format.SpaceBefore = Unit.FromPoint(0);
-        statusPar.Format.SpaceAfter = Unit.FromPoint(6);
-        statusPar.Format.Borders.Top.Width = 4;
-        statusPar.Format.Borders.Top.Color = zutaBoja;
-        statusPar.Format.Borders.Bottom.Width = 4;
-        statusPar.Format.Borders.Bottom.Color = zutaBoja;
-        statusPar.AddText("ЈМБГ није пронађен у РФЗО евиденцији за овај период");
+        _pomocnik.DodajStatusnuTraku(section,
+            "ЈМБГ није пронађен у РФЗО евиденцији за овај период");
 
         // Табела са 5 колона (без колоне Статус провере)
         var table = _pomocnik.KreirajTabeluSaZaglavljem(

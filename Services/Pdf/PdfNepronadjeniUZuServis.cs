@@ -35,24 +35,10 @@ public class PdfNepronadjeniUZuServis
             $"Шифра ЗУ: {prvi.SifraZuNormalizovana} | Назив ЗУ: {prvi.NazivZu} | Број радника: {stavke.Count}",
             false);
 
-        var zutaBoja = new Color(255, 193, 7); // #FFC107
-        var tamniTekst = new Color(33, 37, 41); // #212529
 
         // Жута трака са разлогом неслагања
-        var statusPar = section.AddParagraph();
-        statusPar.Format.Shading.Color = zutaBoja;
-        statusPar.Format.Font.Color = tamniTekst;
-        statusPar.Format.Font.Bold = true;
-        statusPar.Format.Font.Size = 8.5;
-        statusPar.Format.LeftIndent = Unit.FromPoint(4);
-        statusPar.Format.RightIndent = Unit.FromPoint(4);
-        statusPar.Format.SpaceBefore = Unit.FromPoint(0);
-        statusPar.Format.SpaceAfter = Unit.FromPoint(6);
-        statusPar.Format.Borders.Top.Width = 4;
-        statusPar.Format.Borders.Top.Color = zutaBoja;
-        statusPar.Format.Borders.Bottom.Width = 4;
-        statusPar.Format.Borders.Bottom.Color = zutaBoja;
-        statusPar.AddText("Радник је на списку РФЗО-а, али није достављен у ЗУ фајлу");
+        _pomocnik.DodajStatusnuTraku(section,
+            "Радник је на списку РФЗО-а, али није достављен у ЗУ фајлу");
 
         // Табела са 4 колоне
         var table = _pomocnik.KreirajTabeluSaZaglavljem(

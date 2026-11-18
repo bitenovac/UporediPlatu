@@ -117,7 +117,7 @@
                                     var nazivFajla = red["NazivFajla"]?.ToString();
                                     var period = Convert.ToDateTime(red["PeriodUvoza"]);
                                     var datumUvoza = Convert.ToDateTime(red["DatumUvozaPodataka"]);
-                                    var kljucVremena = datumUvoza.ToString("yyyyMMddHHmmssfff");
+                                    var kljucVremena = VremenskiKljuc.Formiraj(datumUvoza);
 
                                     <tr>
                                         <td class="fw-bold text-success ps-3">🟢 @nazivFajla</td>

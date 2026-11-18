@@ -2,7 +2,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace UporediPlate.Models;
 
-public class RfzoUvoz
+public class RfzoUvoz : IUvozniZapis
 {
     [Key]
     public int Id { get; set; }

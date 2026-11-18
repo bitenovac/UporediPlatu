@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace UporediPlate.Models;
 
 [Table("ZuUvozi")]
-public class ZuUvoz
+public class ZuUvoz : IUvozniZapis
 {
     [Key]
     public int Id { get; set; }

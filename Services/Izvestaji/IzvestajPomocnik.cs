@@ -27,6 +27,10 @@ public class IzvestajPomocnik
         return ociscena;
     }
 
+    // Шифра ЗУ за назив листа/фајла: оригинална ако постоји, иначе нормализована
+    public static string SifraZaPrikaz(string? sifraOriginal, string sifraNormalizovana) =>
+        string.IsNullOrWhiteSpace(sifraOriginal) ? sifraNormalizovana : sifraOriginal;
+
     // Учитава све ЗУ записе на основу изабраних кључева (yyyyMMddHHmmss)
     public async Task<List<ZuUvoz>> UcitajIzabraneZuZapiseAsync(List<string> izabraniKljucevi)
     {
@@ -38,21 +42,11 @@ public class IzvestajPomocnik
 
         foreach (var kljuc in izabraniKljucevi)
         {
-            if (kljuc.Length >= 14)
+            if (VremenskiKljuc.PokusajParsiranje(kljuc, out var pocetak))
             {
-                var godina = int.Parse(kljuc.Substring(0, 4));
-                var mesec = int.Parse(kljuc.Substring(4, 2));
-                var dan = int.Parse(kljuc.Substring(6, 2));
-                var sat = int.Parse(kljuc.Substring(8, 2));
-                var minut = int.Parse(kljuc.Substring(10, 2));
-                var sekund = int.Parse(kljuc.Substring(12, 2));
-
-                var pocetak = new DateTime(godina, mesec, dan, sat, minut, sekund);
-                var kraj = pocetak.AddSeconds(1);
-
                 var zapisiFajla = await _context.ZuUvozi
                     .AsNoTracking()
-                    .Where(x => x.DatumUvozaPodataka >= pocetak && x.DatumUvozaPodataka < kraj)
+                    .IzUvoza(pocetak)
                     .ToListAsync();
 
                 zuZapisi.AddRange(zapisiFajla);

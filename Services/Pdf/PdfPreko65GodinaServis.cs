@@ -1,6 +1,7 @@
 using MigraDoc.DocumentObjectModel;
 using MigraDoc.DocumentObjectModel.Tables;
 using UporediPlate.Models;
+using UporediPlate.Services.Izvestaji;
 
 namespace UporediPlate.Services.Pdf;
 
@@ -21,9 +22,7 @@ public class PdfPreko65GodinaServis
 
         return _pomocnik.SpakujPdfIliZip(
             grupePoZu,
-            grupa => string.IsNullOrWhiteSpace(grupa.First().SifraZuOriginal)
-                ? grupa.Key
-                : grupa.First().SifraZuOriginal,
+            grupa => IzvestajPomocnik.SifraZaPrikaz(grupa.First().SifraZuOriginal, grupa.Key),
             KreirajPdfZaUstanovu,
             "Izvestaj_Preko_65_Godina",
             "Izvestaji_Preko_65_Godina_PDF");
@@ -38,24 +37,9 @@ public class PdfPreko65GodinaServis
             $"Шифра ЗУ: {prvi.SifraZuOriginal} ({prvi.SifraZuNormalizovana}) | Назив ЗУ: {prvi.NazivZu} | Број радника: {stavke.Count}",
             true);
 
-        var zutaBoja = new Color(255, 193, 7); // #FFC107
-        var tamniTekst = new Color(33, 37, 41); // #212529
         var crvenaBoja = new Color(220, 53, 69); // #DC3545
 
-        var statusPar = section.AddParagraph();
-        statusPar.Format.Shading.Color = zutaBoja;
-        statusPar.Format.Font.Color = tamniTekst;
-        statusPar.Format.Font.Bold = true;
-        statusPar.Format.Font.Size = 8.5;
-        statusPar.Format.LeftIndent = Unit.FromPoint(4);
-        statusPar.Format.RightIndent = Unit.FromPoint(4);
-        statusPar.Format.SpaceBefore = Unit.FromPoint(0);
-        statusPar.Format.SpaceAfter = Unit.FromPoint(6);
-        statusPar.Format.Borders.Top.Width = 4;
-        statusPar.Format.Borders.Top.Color = zutaBoja;
-        statusPar.Format.Borders.Bottom.Width = 4;
-        statusPar.Format.Borders.Bottom.Color = zutaBoja;
-        statusPar.AddText(
+        _pomocnik.DodajStatusnuTraku(section,
             "Напомена: Црвеним словима су означени запослени који у обрачунском месецу пуне 65 година живота.");
 
         var table = _pomocnik.KreirajTabeluSaZaglavljem(
@@ -96,11 +80,11 @@ public class PdfPreko65GodinaServis
             row.Cells[3].AddParagraph(item.Prezime).Format.Font.Bold = true;
             row.Cells[4].AddParagraph(item.DatumRodjenja.ToString("dd.MM.yyyy")).Format.Alignment =
                 ParagraphAlignment.Center;
-            row.Cells[5].AddParagraph(item.RedovanRad.ToString("N2")).Format.Alignment = ParagraphAlignment.Right;
-            row.Cells[6].AddParagraph(item.PrekovremeniSati.ToString("N2")).Format.Alignment = ParagraphAlignment.Right;
-            row.Cells[7].AddParagraph(item.DezurstvoSati.ToString("N2")).Format.Alignment = ParagraphAlignment.Right;
-            row.Cells[8].AddParagraph(item.PoPozivuSati.ToString("N2")).Format.Alignment = ParagraphAlignment.Right;
-            row.Cells[9].AddParagraph(item.PripravnostSati.ToString("N2")).Format.Alignment = ParagraphAlignment.Right;
+            _pomocnik.DodajBroj(row.Cells[5], item.RedovanRad);
+            _pomocnik.DodajBroj(row.Cells[6], item.PrekovremeniSati);
+            _pomocnik.DodajBroj(row.Cells[7], item.DezurstvoSati);
+            _pomocnik.DodajBroj(row.Cells[8], item.PoPozivuSati);
+            _pomocnik.DodajBroj(row.Cells[9], item.PripravnostSati);
 
             var netoPar = row.Cells[10].AddParagraph(item.UkupanNeto.ToString("N2"));
             netoPar.Format.Alignment = ParagraphAlignment.Right;

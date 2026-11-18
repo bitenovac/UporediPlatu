@@ -1,6 +1,7 @@
 using MigraDoc.DocumentObjectModel;
 using MigraDoc.DocumentObjectModel.Tables;
 using UporediPlate.Models;
+using UporediPlate.Services.Izvestaji;
 
 namespace UporediPlate.Services.Pdf;
 
@@ -21,9 +22,7 @@ public class PdfNeslaganjeKoeficijenataServis
 
         return _pomocnik.SpakujPdfIliZip(
             grupePoZu,
-            grupa => string.IsNullOrWhiteSpace(grupa.First().SifraZuOriginal)
-                ? grupa.Key
-                : grupa.First().SifraZuOriginal,
+            grupa => IzvestajPomocnik.SifraZaPrikaz(grupa.First().SifraZuOriginal, grupa.Key),
             KreirajPdfZaUstanovu,
             "Izvestaj_Neslaganje_Koeficijenata",
             "Izvestaji_Neslaganje_Koeficijenata_PDF");
@@ -38,23 +37,9 @@ public class PdfNeslaganjeKoeficijenataServis
             $"Шифра ЗУ: {prvi.SifraZuOriginal} ({prvi.SifraZuNormalizovana}) | Назив ЗУ: {prvi.NazivZu} | Број радника: {stavke.Count}",
             true);
 
-        var zutaBoja = new Color(255, 193, 7); // #FFC107
-        var tamniTekst = new Color(33, 37, 41); // #212529
 
-        var statusPar = section.AddParagraph();
-        statusPar.Format.Shading.Color = zutaBoja;
-        statusPar.Format.Font.Color = tamniTekst;
-        statusPar.Format.Font.Bold = true;
-        statusPar.Format.Font.Size = 8.5;
-        statusPar.Format.LeftIndent = Unit.FromPoint(4);
-        statusPar.Format.RightIndent = Unit.FromPoint(4);
-        statusPar.Format.SpaceBefore = Unit.FromPoint(0);
-        statusPar.Format.SpaceAfter = Unit.FromPoint(6);
-        statusPar.Format.Borders.Top.Width = 4;
-        statusPar.Format.Borders.Top.Color = zutaBoja;
-        statusPar.Format.Borders.Bottom.Width = 4;
-        statusPar.Format.Borders.Bottom.Color = zutaBoja;
-        statusPar.AddText("Утврђена је разлика у основном или укупном коефицијенту између РФЗО и ЗУ евиденције");
+        _pomocnik.DodajStatusnuTraku(section,
+            "Утврђена је разлика у основном или укупном коефицијенту између РФЗО и ЗУ евиденције");
 
         var table = _pomocnik.KreirajTabeluSaZaglavljem(
             section,
@@ -85,10 +70,10 @@ public class PdfNeslaganjeKoeficijenataServis
             row.Cells[2].AddParagraph(item.Ime);
             row.Cells[3].AddParagraph(item.Prezime).Format.Font.Bold = true;
             row.Cells[4].AddParagraph(item.NazivRM);
-            row.Cells[5].AddParagraph(item.OsnovniKoefRfzo.ToString("N2")).Format.Alignment = ParagraphAlignment.Right;
-            row.Cells[6].AddParagraph(item.OsnovniKoefZu.ToString("N2")).Format.Alignment = ParagraphAlignment.Right;
-            row.Cells[7].AddParagraph(item.UkupniKoefRfzo.ToString("N2")).Format.Alignment = ParagraphAlignment.Right;
-            row.Cells[8].AddParagraph(item.UkupniKoefZu.ToString("N2")).Format.Alignment = ParagraphAlignment.Right;
+            _pomocnik.DodajBroj(row.Cells[5], item.OsnovniKoefRfzo);
+            _pomocnik.DodajBroj(row.Cells[6], item.OsnovniKoefZu);
+            _pomocnik.DodajBroj(row.Cells[7], item.UkupniKoefRfzo);
+            _pomocnik.DodajBroj(row.Cells[8], item.UkupniKoefZu);
         }
 
         return _pomocnik.RenderujDokument(doc, section);
