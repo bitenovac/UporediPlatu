@@ -7,7 +7,6 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <UserSecretsId>46353ae4-6ed8-46b1-92cf-7985f1838514</UserSecretsId>
         <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
-        <NoWarn>NU1902;NU1903</NoWarn>
     </PropertyGroup>
 
     <ItemGroup>
@@ -24,7 +23,7 @@
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
             <PrivateAssets>all</PrivateAssets>
         </PackageReference>
-        <PackageReference Include="PDFsharp-MigraDoc" Version="6.2.4" />
+        <PackageReference Include="PDFsharp-MigraDoc" Version="[6.2.4]" />
     </ItemGroup>
 
 </Project>
